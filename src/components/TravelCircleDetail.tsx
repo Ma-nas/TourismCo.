@@ -18,8 +18,9 @@ const TravelCircleDetail = () => {
   ];
 
   const handleJoin = async () => {
+    const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     try {
-      const res = await fetch(`http://localhost:5000/api/circles/${circle.id}/join`, {
+      await fetch(`${BASE}/api/circles/${circle.id}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer demo' }
       });

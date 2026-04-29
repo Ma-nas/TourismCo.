@@ -70,7 +70,7 @@ const ItineraryBuilder = () => {
   const [bookingDone, setBookingDone] = useState(false);
   const [confirmationId, setConfirmationId] = useState('');
 
-  const API = 'http://localhost:5000/api';
+  const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api';
 
   // Fetch options when city changes
   useEffect(() => {
