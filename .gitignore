@@ -1,0 +1,45 @@
+# ─── Dependencies ─────────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ─── Build output ─────────────────────────────────────────────────────────────
+dist/
+dist-ssr/
+build/
+
+# ─── Environment variables (NEVER commit secrets) ─────────────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+server/.env
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── Vite / TS cache ──────────────────────────────────────────────────────────
+.vite/
+*.local
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# ─── OS / IDE files ───────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# ─── Large extracted raw data files ───────────────────────────────────────────
+server/src/config/up_tourism_raw.txt
+server/src/config/up_tourism_tables.json
+
+# ─── Agent / skill internal files ─────────────────────────────────────────────
+.agents/
+.gemini/
+skills-lock.json
