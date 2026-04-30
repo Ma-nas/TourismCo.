@@ -13,6 +13,7 @@ import {
   accommodationData,
   expenditurePattern,
   gradedDestinations,
+  extendedDestinations,
   topOriginStates,
   topForeignOrigins,
   visitorStats
@@ -112,9 +113,21 @@ const buildBudgetBreakdown = (totalBudget, days) => {
 const getTopSpotsForCity = (cityName, maxGrade = 'A') => {
   const gradeOrder = { 'A': 1, 'B': 2, 'C': 3 };
   const maxRank = gradeOrder[maxGrade] || 2;
-  return gradedDestinations
-    .filter(d => d.city.toLowerCase() === cityName.toLowerCase() && gradeOrder[d.grade] <= maxRank)
-    .map(d => ({ name: d.place, type: d.type, grade: d.grade, note: d.note }));
+  
+  // Merge original destinations with the newly scraped official data
+  const allSpots = [...gradedDestinations, ...extendedDestinations];
+  
+  // Deduplicate by place name
+  const uniqueSpotsMap = new Map();
+  allSpots.forEach(d => {
+    if (d.city.toLowerCase() === cityName.toLowerCase() && gradeOrder[d.grade] <= maxRank) {
+      if (!uniqueSpotsMap.has(d.place.toLowerCase())) {
+        uniqueSpotsMap.set(d.place.toLowerCase(), d);
+      }
+    }
+  });
+
+  return Array.from(uniqueSpotsMap.values()).map(d => ({ name: d.place, type: d.type, grade: d.grade, note: d.note }));
 };
 
 // ─── Get accommodation info for city from KB ─────────────────────────────────
@@ -220,7 +233,8 @@ export const getSmartRecommendations = (preferences = {}) => {
     let score = 60;
 
     // Score from real KB grade-A sites
-    const gradeASites = gradedDestinations.filter(
+    const allSpots = [...gradedDestinations, ...extendedDestinations];
+    const gradeASites = allSpots.filter(
       g => g.city.toLowerCase() === dest.name.toLowerCase() && g.grade === 'A'
     );
     score += gradeASites.length * 5;

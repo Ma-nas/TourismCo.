@@ -118,7 +118,9 @@ httpServer.listen(PORT, () => {
   console.log(`   GET  /api/destinations   | GET  /api/destinations/search`);
   console.log(`   GET  /api/destinations/matches`);
   console.log(`   GET  /api/circles        | POST /api/circles/:id/join`);
-  console.log(`   POST /api/ai/chat        | POST /api/ai/plan`);
+  console.log(`   POST /api/ai/chat        | POST /api/ai/chat/message (PRD)`);
+  console.log(`   POST /api/ai/plan        | GET  /api/ai/stats | GET /api/ai/recommendations`);
+  console.log(`   GET  /api/ai/booking-links?destination=Varanasi`);
   console.log(`   GET  /api/ai/stats       | GET  /api/ai/recommendations`);
   console.log(`   GET  /api/itinerary/options/:city`);
   console.log(`   POST /api/itinerary/calculate`);

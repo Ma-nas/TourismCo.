@@ -1,35 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Syne:wght@700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  * {
-    box-sizing: border-box;
+  * { box-sizing: border-box; }
+
+  html {
+    color-scheme: dark;   /* tells browser to use dark defaults */
   }
+
   html, body, #root {
     height: 100%;
     margin: 0;
     padding: 0;
   }
+
   body {
     background-color: #0B0F14;
     color: #E6EDF3;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-family: 'Inter', sans-serif;
   }
+
+  h1, h2, h3, .font-display {
+    font-family: 'Syne', 'Inter', sans-serif;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(79,156,249,0.25); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(79,156,249,0.5); }
+  * { scrollbar-width: thin; scrollbar-color: rgba(79,156,249,0.25) transparent; }
 }
 
 @layer utilities {
+  /* Glassmorphism */
   .glass {
     background: rgba(26, 34, 48, 0.7);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
   }
-  .glow-primary {
-    box-shadow: 0 0 20px rgba(79, 156, 249, 0.25);
+
+  /* Glow effects */
+  .glow-primary { box-shadow: 0 0 24px rgba(79, 156, 249, 0.3); }
+  .glow-secondary { box-shadow: 0 0 24px rgba(124, 255, 203, 0.25); }
+
+  /* Hide scrollbar but keep scroll */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-  .glow-secondary {
-    box-shadow: 0 0 20px rgba(124, 255, 203, 0.2);
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(90deg, #4F9CF9, #7CFFCB);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Shimmer loading animation */
+  .shimmer {
+    background: linear-gradient(90deg, rgba(26,34,48,0.8) 25%, rgba(40,54,72,0.9) 50%, rgba(26,34,48,0.8) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
   }
 }
+
+/* Keyframe animations */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 12px rgba(79,156,249,0.3); }
+  50%       { box-shadow: 0 0 30px rgba(79,156,249,0.6); }
+}
+
+/* Apply animations */
+.animate-fadeInUp { animation: fadeInUp 0.4s ease forwards; }
+.animate-fadeIn   { animation: fadeIn   0.3s ease forwards; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+/* Input autofill dark override — must override browser white fill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #E6EDF3 !important;
+  -webkit-box-shadow: 0 0 0 1000px #121821 inset !important;
+  box-shadow: 0 0 0 1000px #121821 inset !important;
+  background-color: #121821 !important;
+  color: #E6EDF3 !important;
+  caret-color: #E6EDF3 !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Force dark on all inputs globally */
+input, textarea, select {
+  background-color: transparent;
+  color: #E6EDF3;
+}
+

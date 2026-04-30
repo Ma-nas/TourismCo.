@@ -141,3 +141,84 @@ export const topForeignOrigins = [
   { country: "France",    visitors: 26664, bedNights: 59799  },
   { country: "Korea",     visitors: 19320, bedNights: 46364  },
 ];
+
+// ─── Scraped Supplemental Data (Gov & Trawell) ─────────────────────────
+export const extendedDestinations = [
+  // Varanasi
+  { city: "Varanasi", place: "Kashi Vishwanath Temple / Golden Temple", grade: "A", type: "Spiritual", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Dasashwamedh Ghat", grade: "A", type: "Spiritual", note: "Top curated attraction" },
+  { city: "Varanasi", place: "New Vishwanath Temple / Birla Temple", grade: "A", type: "Spiritual", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Durgakund Temple", grade: "B", type: "Spiritual", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Tulsi Manas Mandir", grade: "B", type: "Spiritual", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Manikarnika Ghat", grade: "A", type: "Heritage", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Lalita Ghat & Nepali Temple", grade: "B", type: "Heritage", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Assi Ghat", grade: "A", type: "Heritage", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Ramnagar Fort", grade: "B", type: "Heritage", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Darbhanga Ghat", grade: "B", type: "Heritage", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Chet Singh Ghat", grade: "B", type: "Heritage", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Man Mandir Ghat", grade: "B", type: "Heritage", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Scindia Ghat", grade: "C", type: "Heritage", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Panchganga Ghat", grade: "B", type: "Heritage", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Tulsi Ghat", grade: "B", type: "Heritage", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Sankat Mochan Hanuman Mandir", grade: "A", type: "Spiritual", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Kaal Bhairav Mandir", grade: "A", type: "Spiritual", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Bharat Kala Bhavan Museum", grade: "B", type: "Heritage", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Annapurna Devi Mandir", grade: "A", type: "Spiritual", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Jantar Mantar / Man Singh Observatory", grade: "B", type: "Heritage", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Sri Kasi Vishalakshi Devi Temple", grade: "B", type: "Spiritual", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Chunar Fort", grade: "B", type: "Heritage", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Lakhaniya Dari Waterfalls", grade: "A", type: "Nature", note: "Top curated attraction" },
+  { city: "Varanasi", place: "Chandraprabha Wildlife Sanctuary", grade: "B", type: "Nature", note: "Top curated attraction" },
+  
+  // Lucknow
+  { city: "Lucknow", place: "La Martiniere College Lucknow", grade: "A", type: "Heritage", note: "Official district tourism site" },
+  { city: "Lucknow", place: "All Saints Garrison Church", grade: "B", type: "Heritage", note: "Official district tourism site" },
+  { city: "Lucknow", place: "Hanuman Mandir Aliganj", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Lucknow", place: "Maqbara Saadat Ali Khan", grade: "A", type: "Heritage", note: "Official district tourism site" },
+  { city: "Lucknow", place: "Nadan Mahal", grade: "B", type: "Heritage", note: "Official district tourism site" },
+  { city: "Lucknow", place: "Sikandar Bagh", grade: "B", type: "Heritage", note: "Official district tourism site" },
+  { city: "Lucknow", place: "Imambada Sibtainabad", grade: "A", type: "Heritage", note: "Official district tourism site" },
+  { city: "Lucknow", place: "Bibiyapur Kothi", grade: "B", type: "Heritage", note: "Official district tourism site" },
+  { city: "Lucknow", place: "Dilkusha Palace", grade: "A", type: "Heritage", note: "Official district tourism site" },
+  
+  // Mathura
+  { city: "Mathura", place: "Shri Krishna Janambhumi", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Mathura", place: "Shri Dwarkadhish Temple", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Mathura", place: "Raman Reti, Gokul", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Mathura", place: "Shri Banke Bihari", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Mathura", place: "Radha Raman Temple", grade: "B", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Mathura", place: "Iskcon Temple Vrindavan", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Mathura", place: "Prem Mandir", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Mathura", place: "Shri Radha Rani Mandir, Barsana", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  
+  // Prayagraj
+  { city: "Prayagraj", place: "Shri Lete hue Hanumanji Temple", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Prayagraj", place: "Allahabad Museum", grade: "A", type: "Heritage", note: "Official district tourism site" },
+  { city: "Prayagraj", place: "The New Yamuna Bridge", grade: "B", type: "Attraction", note: "Official district tourism site" },
+  { city: "Prayagraj", place: "Khusro Bagh", grade: "B", type: "Heritage", note: "Official district tourism site" },
+  { city: "Prayagraj", place: "Anand Bhawan", grade: "A", type: "Heritage", note: "Official district tourism site" },
+  { city: "Prayagraj", place: "Kumbh Mela and Sangam", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Prayagraj", place: "Chandra Shekhar Azad Park", grade: "B", type: "Nature", note: "Official district tourism site" },
+  
+  // Mirzapur / Vindhyachal
+  { city: "Mirzapur", place: "Vindhyavasini Devi Temple", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Mirzapur", place: "Ashtabhuja Temple", grade: "B", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Mirzapur", place: "Kali Khoh Temple", grade: "B", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Mirzapur", place: "Sita Kund", grade: "C", type: "Nature", note: "Official district tourism site" },
+  { city: "Mirzapur", place: "Wyndham Falls", grade: "B", type: "Nature", note: "Official district tourism site" },
+
+  // Chitrakoot
+  { city: "Chitrakoot", place: "Ramghat", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Chitrakoot", place: "Kamadgiri Temple", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Chitrakoot", place: "Hanuman Dhara", grade: "B", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Chitrakoot", place: "Gupt Godavari", grade: "A", type: "Nature", note: "Official district tourism site" },
+  { city: "Chitrakoot", place: "Sphatik Shila", grade: "B", type: "Spiritual", note: "Official district tourism site" },
+  
+  // Ayodhya
+  { city: "Ayodhya", place: "Shri Ram Janmabhoomi Mandir", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Ayodhya", place: "Hanuman Garhi", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Ayodhya", place: "Kanak Bhawan", grade: "A", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Ayodhya", place: "Nageshwarnath Temple", grade: "B", type: "Spiritual", note: "Official district tourism site" },
+  { city: "Ayodhya", place: "Ram Ki Paidi", grade: "A", type: "Heritage", note: "Official district tourism site" },
+  { city: "Ayodhya", place: "Guptar Ghat", grade: "B", type: "Heritage", note: "Official district tourism site" }
+];

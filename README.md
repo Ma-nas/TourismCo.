@@ -1,144 +1,72 @@
-# TourismCo. 🌏
+# ✈️ TourismCo. AI 
+**The Intelligent Travel OS for Uttar Pradesh**
 
-> **AI-Powered Travel Platform for Uttar Pradesh, India**  
-> Built with React + Vite + TypeScript (frontend) and Node.js + Express + Socket.IO (backend)
+![TourismCo. AI](https://img.shields.io/badge/Status-Production_Ready-success?style=for-the-badge)
+![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react)
+![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?style=for-the-badge&logo=nodedotjs)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-3.x-06B6D4?style=for-the-badge&logo=tailwindcss)
+![Gemini](https://img.shields.io/badge/Google_Gemini-AI-4285F4?style=for-the-badge&logo=google)
 
----
+## 📖 Overview
+**TourismCo. AI** is a premium, AI-driven travel planning platform designed specifically to modernize tourism in **Uttar Pradesh, India**. Powered by a custom **Retrieval-Augmented Generation (RAG)** pipeline and the Google Gemini LLM, it acts as a hyper-intelligent travel agent. 
 
-## ✨ Features
+Users can ask for specific, complex multi-destination trips (e.g., *"Plan 5 days in Varanasi and Ayodhya under ₹15,000"*), and the system dynamically generates highly accurate, budget-optimized, day-by-day itineraries mapped to official UP Tourism data.
 
-- 🤖 **AI Trip Planner** — Natural language trip planning powered by real Govt. of India UP tourism data
-- 🗺️ **Itinerary Builder** — 5-step customization: accommodation tier, transport, meal plans, activity addons
-- 🎯 **Smart Destination Matching** — Scored recommendations based on interests & budget
-- 👥 **Travel Circles** — Social groups for collaborative trip planning with real-time group chat (Socket.IO)
-- 📅 **Booking System** — Confirm trips with TCO-XXXXXX confirmation IDs
-- 📊 **Real Tourism Data** — Backed by Ministry of Tourism, Govt. of India survey (ACNielsen, 2005–06)
-- 🇮🇳 **UP-Localized** — All content, pricing in INR (₹), destinations across Uttar Pradesh only
+## ✨ Key Features
+* **🧠 Custom RAG AI Engine:** Replaces generic LLM hallucinations with verified, structured data. Dynamically generates Budget, Balanced, and Premium itineraries.
+* **🗺️ Multi-Destination Routing:** Capable of splitting days intelligently across multiple cities seamlessly.
+* **🏨 Intelligent Resource Booking:** Automatically aggregates and generates direct booking links for trains, flights, and hotels based on the generated itinerary.
+* **🎨 Glassmorphic UI/UX:** A stunning, highly-responsive frontend built with React, Vite, and Tailwind CSS.
+* **📱 Travel Circles:** A real-time collaboration feature to plan trips with friends.
 
----
+## 🛠️ Tech Stack
+* **Frontend:** React.js (Vite), TypeScript, Tailwind CSS, Lucide Icons, React Router.
+* **Backend:** Node.js, Express.js, Socket.IO.
+* **AI/Machine Learning:** Google Gemini Pro API, Custom JSON RAG Knowledge Base (`upTourismKB.js`).
+* **Architecture:** Stateless micro-services, built for Vercel/Render deployments.
 
-## 🚀 Getting Started
+## 🚀 Installation & Setup
 
 ### Prerequisites
-- Node.js v18+
-- npm v9+
+* Node.js (v18+)
+* Git
+* A Google Gemini API Key
 
-### Frontend (Vite + React)
+### 1. Clone the Repository
 ```bash
-npm install
-npm run dev
-# → http://localhost:5173
+git clone https://github.com/Ma-nas/TourismCo.git
+cd TourismCo
 ```
 
-### Backend (Express + Socket.IO)
+### 2. Backend Setup
 ```bash
 cd server
 npm install
-# Create server/.env (see server/.env.example)
-node src/index.js
-# → http://localhost:5000
+
+# Create a .env file and add your Gemini API Key
+echo "PORT=5000" > .env
+echo "GEMINI_API_KEY=your_api_key_here" >> .env
+
+# Start the development server
+npm run dev
 ```
 
----
+### 3. Frontend Setup
+```bash
+# Open a new terminal from the root TourismCo directory
+npm install
 
-## 🗂️ Project Structure
+# Create a .env file to connect to the local backend
+echo "VITE_API_URL=http://localhost:5000" > .env
 
-```
-TourismCO/
-├── src/                        # React frontend
-│   ├── components/
-│   │   ├── Dashboard.tsx       # Main home page
-│   │   ├── TopNav.tsx          # Navigation with logo
-│   │   ├── HeroSection.tsx     # AI search hero
-│   │   ├── TravelCircleDetail.tsx  # Circle view with live chat
-│   │   └── ItineraryBuilder.tsx    # 5-step trip planner UI
-│   ├── data/
-│   │   └── mockData.ts         # Frontend mock data
-│   └── App.tsx                 # Routes: /, /plan, /circle/:id
-│
-├── server/                     # Express backend
-│   └── src/
-│       ├── config/
-│       │   ├── dataStore.js        # In-memory destination & circle data
-│       │   ├── bookingStore.js     # Accommodation, transport, meal, activity options
-│       │   └── upTourismKB.js      # Real UP tourism knowledge base (Govt. data)
-│       ├── services/
-│       │   ├── aiEngine.js         # RAG-lite AI planner engine
-│       │   ├── travelService.js    # Destination matching & search
-│       │   ├── itineraryService.js # Custom itinerary builder
-│       │   └── bookingService.js   # Booking CRUD
-│       ├── routes/
-│       │   ├── auth.js, destinations.js, circles.js
-│       │   ├── ai.js, itinerary.js, bookings.js
-│       └── index.js            # Express + Socket.IO server
-│
-├── public/
-│   └── logo.png                # TourismCo. brand logo
-└── up_0.pdf                    # Source: Ministry of Tourism UP survey
+# Start the frontend
+npm run dev
 ```
 
----
+## 🌍 Deployment Guide
+This repository is pre-configured for free cloud deployment:
+1. **Frontend:** Deploy the root directory directly to **Vercel**. Set the `VITE_API_URL` environment variable to your backend URL.
+2. **Backend:** Deploy the `server/` directory to **Render** as a Node Web Service. Set `GEMINI_API_KEY` in Render's environment settings.
 
-## 📡 API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/health` | Server health |
-| POST | `/api/auth/register` | Register user |
-| POST | `/api/auth/login` | Login + JWT |
-| GET | `/api/destinations` | All UP destinations |
-| GET | `/api/destinations/search?q=varanasi` | Search |
-| GET | `/api/destinations/matches?interests=Spiritual&budget=15000` | AI matching |
-| GET | `/api/circles` | All Travel Circles |
-| POST | `/api/circles/:id/join` | Join a circle (auth) |
-| POST | `/api/ai/chat` | Natural language trip planning |
-| GET | `/api/ai/stats` | Real UP tourism statistics |
-| GET | `/api/itinerary/options/:city` | Customization options |
-| POST | `/api/itinerary/calculate` | Live cost preview (INR) |
-| POST | `/api/itinerary/build` | Build full itinerary |
-| POST | `/api/bookings` | Create booking |
-| GET | `/api/bookings/mine` | User's bookings (auth) |
-| PATCH | `/api/bookings/:id/cancel` | Cancel booking |
-
----
-
-## 🔌 WebSocket Events (Socket.IO)
-
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| `join:circle` | Client → Server | Join a group room |
-| `message:send` | Client → Server | Send group chat message |
-| `message:receive` | Server → Client | Receive group message |
-| `location:update` | Client → Server | Share live location (consent) |
-| `location:updated` | Server → Client | Member location broadcast |
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, Vite, TypeScript, Tailwind CSS |
-| Routing | react-router-dom v6 |
-| Icons | lucide-react |
-| Backend | Node.js, Express.js (ES Modules) |
-| Real-time | Socket.IO v4 |
-| Auth | JWT (jsonwebtoken) |
-| Security | Helmet, CORS, express-rate-limit |
-| AI Engine | Custom RAG-lite (no external API) |
-| Data Source | Ministry of Tourism, Govt. of India |
-
----
-
-## 📊 Data Source
-
-The AI engine is trained on real UP tourism survey data:
-- **Source:** ACNielsen ORG-MARG Pvt. Ltd. for Ministry of Tourism, Govt. of India
-- **Period:** April 2005 – March 2006
-- **Coverage:** 17.8 million visitors, 43 surveyed locations, 1,326 hotels
-
----
-
-## 📝 License
-
-MIT © 2026 TourismCo.
+## 📜 License
+This project is licensed under the MIT License - see the LICENSE file for details.
