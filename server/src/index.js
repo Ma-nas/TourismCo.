@@ -24,8 +24,9 @@ const httpServer = createServer(app);
 // ─── Socket.IO (for real-time group chat & live tracking) ────────────────────
 const io = new SocketIO(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL,
-    methods: ['GET', 'POST']
+    origin: (origin, callback) => callback(null, true),
+    methods: ['GET', 'POST'],
+    credentials: true
   }
 });
 
@@ -62,7 +63,12 @@ io.on('connection', (socket) => {
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(cors({ 
+  origin: function (origin, callback) {
+    callback(null, true); // Allow any origin temporarily for easier setup
+  }, 
+  credentials: true 
+}));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
