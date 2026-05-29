@@ -1,4 +1,4 @@
-# ✈️ TourismCo. AI 
+# TourismCo. AI 
 **The Intelligent Travel OS for Uttar Pradesh**
 
 ![TourismCo. AI](https://img.shields.io/badge/Status-Production_Ready-success?style=for-the-badge)
@@ -7,25 +7,25 @@
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-3.x-06B6D4?style=for-the-badge&logo=tailwindcss)
 ![Gemini](https://img.shields.io/badge/Google_Gemini-AI-4285F4?style=for-the-badge&logo=google)
 
-## 📖 Overview
+##  Overview
 **TourismCo. AI** is a premium, AI-driven travel planning platform designed specifically to modernize tourism in **Uttar Pradesh, India**. Powered by a custom **Retrieval-Augmented Generation (RAG)** pipeline and the Google Gemini LLM, it acts as a hyper-intelligent travel agent. 
 
 Users can ask for specific, complex multi-destination trips (e.g., *"Plan 5 days in Varanasi and Ayodhya under ₹15,000"*), and the system dynamically generates highly accurate, budget-optimized, day-by-day itineraries mapped to official UP Tourism data.
 
-## ✨ Key Features
-* **🧠 Custom RAG AI Engine:** Replaces generic LLM hallucinations with verified, structured data. Dynamically generates Budget, Balanced, and Premium itineraries.
-* **🗺️ Multi-Destination Routing:** Capable of splitting days intelligently across multiple cities seamlessly.
-* **🏨 Intelligent Resource Booking:** Automatically aggregates and generates direct booking links for trains, flights, and hotels based on the generated itinerary.
-* **🎨 Glassmorphic UI/UX:** A stunning, highly-responsive frontend built with React, Vite, and Tailwind CSS.
-* **📱 Travel Circles:** A real-time collaboration feature to plan trips with friends.
+##  Key Features
+* ** Custom RAG AI Engine:** Replaces generic LLM hallucinations with verified, structured data. Dynamically generates Budget, Balanced, and Premium itineraries.
+* ** Multi-Destination Routing:** Capable of splitting days intelligently across multiple cities seamlessly.
+* ** Intelligent Resource Booking:** Automatically aggregates and generates direct booking links for trains, flights, and hotels based on the generated itinerary.
+* ** Glassmorphic UI/UX:** A stunning, highly-responsive frontend built with React, Vite, and Tailwind CSS.
+* ** Travel Circles:** A real-time collaboration feature to plan trips with friends.
 
-## 🛠️ Tech Stack
+## Tech Stack
 * **Frontend:** React.js (Vite), TypeScript, Tailwind CSS, Lucide Icons, React Router.
 * **Backend:** Node.js, Express.js, Socket.IO.
 * **AI/Machine Learning:** Google Gemini Pro API, Custom JSON RAG Knowledge Base (`upTourismKB.js`).
 * **Architecture:** Stateless micro-services, built for Vercel/Render deployments.
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 * Node.js (v18+)
@@ -63,10 +63,10 @@ echo "VITE_API_URL=http://localhost:5000" > .env
 npm run dev
 ```
 
-## 🌍 Deployment Guide
+##  Deployment Guide
 This repository is pre-configured for free cloud deployment:
 1. **Frontend:** Deploy the root directory directly to **Vercel**. Set the `VITE_API_URL` environment variable to your backend URL.
 2. **Backend:** Deploy the `server/` directory to **Render** as a Node Web Service. Set `GEMINI_API_KEY` in Render's environment settings.
 
-## 📜 License
+## License
 This project is licensed under the MIT License - see the LICENSE file for details.
