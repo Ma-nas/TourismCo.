@@ -8,7 +8,19 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+const GEMINI_MODELS = [
+  'gemini-2.0-flash-lite',
+  'gemini-1.5-flash-8b',
+  'gemini-1.5-flash',
+  'gemini-2.0-flash',
+  'gemini-2.5-flash',
+  'gemini-1.5-pro',
+  'gemini-2.5-pro'
+];
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const getGeminiUrl = (model) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
 
 // ─── Master System Prompt ─────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are TourismCo. AI — an expert travel planner specializing in Uttar Pradesh, India.
@@ -130,49 +142,85 @@ export const callGemini = async ({ userQuery, ragContext, conversationHistory = 
     ],
   };
 
-  try {
-    console.log('[Gemini] Calling API for query:', userQuery.slice(0, 80));
-    const res = await fetch(GEMINI_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(payload),
-      signal:  AbortSignal.timeout(20000),
-    });
+  let lastError = null;
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error('[Gemini] API HTTP error:', res.status, errText.slice(0, 200));
-      return buildSmartFallback(userQuery, ragContext);
+  for (const model of GEMINI_MODELS) {
+    const url = getGeminiUrl(model);
+    let retries = 2;
+    let delay = 1000;
+
+    while (retries >= 0) {
+      try {
+        console.log(`[Gemini] Calling API for query using model ${model}:`, userQuery.slice(0, 80));
+        const res = await fetch(url, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(payload),
+          signal:  AbortSignal.timeout(20000),
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          console.error(`[Gemini] ${model} HTTP error:`, res.status, errText.slice(0, 200));
+          
+          // Retry on rate limit (429) or server error (503)
+          if ((res.status === 429 || res.status === 503) && retries > 0) {
+            console.log(`[Gemini] ${model} quota/rate limit hit. Retrying in ${delay}ms... (${retries} retries left)`);
+            await sleep(delay);
+            retries--;
+            delay *= 2; // Exponential backoff
+            continue;
+          }
+          
+          throw new Error(`HTTP ${res.status}: ${errText}`);
+        }
+
+        const data = await res.json();
+
+        // Log any safety blocks
+        if (data?.candidates?.[0]?.finishReason === 'SAFETY') {
+          console.warn(`[Gemini] ${model} Safety block triggered`);
+          throw new Error('SAFETY_BLOCK');
+        }
+
+        let text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text || text.trim().length < 20) {
+          console.warn(`[Gemini] ${model} Empty/short response received`);
+          throw new Error('EMPTY_RESPONSE');
+        }
+
+        let thinking = null;
+        const thinkMatch = text.match(/<think>([\s\S]*?)<\/think>/);
+        if (thinkMatch) {
+          thinking = thinkMatch[1].trim();
+          text = text.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+        }
+
+        console.log(`[Gemini] ✅ Response received from ${model}, length:`, text.length);
+        return { text, thinking, source: 'gemini', model: model };
+
+      } catch (err) {
+        console.error(`[Gemini] ${model} Request failed:`, err.message);
+        lastError = err;
+        
+        // If it's a network timeout, we might want to just skip to the next model
+        if (err.name === 'AbortError' || err.message === 'SAFETY_BLOCK' || err.message === 'EMPTY_RESPONSE') {
+          break; // Move to next model
+        }
+        
+        // For other errors, if we are out of retries, we break and move to next model
+        if (retries === 0) {
+          break;
+        }
+        
+        // Otherwise, it was caught in the retry block but thrown as Error, so break
+        break;
+      }
     }
-
-    const data = await res.json();
-
-    // Log any safety blocks
-    if (data?.candidates?.[0]?.finishReason === 'SAFETY') {
-      console.warn('[Gemini] Safety block triggered');
-      return buildSmartFallback(userQuery, ragContext);
-    }
-
-    let text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text || text.trim().length < 20) {
-      console.warn('[Gemini] Empty/short response received');
-      return buildSmartFallback(userQuery, ragContext);
-    }
-
-    let thinking = null;
-    const thinkMatch = text.match(/<think>([\s\S]*?)<\/think>/);
-    if (thinkMatch) {
-      thinking = thinkMatch[1].trim();
-      text = text.replace(/<think>[\s\S]*?<\/think>/, '').trim();
-    }
-
-    console.log('[Gemini] ✅ Response received, length:', text.length);
-    return { text, thinking, source: 'gemini', model: 'gemini-1.5-flash' };
-
-  } catch (err) {
-    console.error('[Gemini] Request failed:', err.message);
-    return buildSmartFallback(userQuery, ragContext);
   }
+
+  console.warn('[Gemini] All models failed. Falling back to smart offline generator. Last error:', lastError?.message);
+  return buildSmartFallback(userQuery, ragContext);
 };
 
 // ─── Smart Fallback — reads ALL constraints, never hardcodes ─────────────────
