@@ -416,11 +416,19 @@ const WanderChat = () => {
     }, 800);
 
     try {
-      const res = await fetch(`${API}/ai/chat/message`, {
+      let res = await fetch(`${API}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: USER_ID, message: q }),
       });
+
+      if (!res.ok) {
+        res = await fetch(`${API}/ai/chat/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: USER_ID, message: q }),
+        });
+      }
 
       clearInterval(phaseInterval);
 
