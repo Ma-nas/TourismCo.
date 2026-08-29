@@ -7,7 +7,10 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const getApiKey = () => {
+  const raw = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || 'AIzaSyAUj7VudEEV9EKiM7bekWt7IV_uvVNt9Mc';
+  return (raw || '').trim().replace(/^["']|["']$/g, '');
+};
 
 const GEMINI_MODELS = [
   'gemini-2.5-flash',
@@ -18,7 +21,7 @@ const GEMINI_MODELS = [
 ];
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-const getGeminiUrl = (model) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+const getGeminiUrl = (model, apiKey) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
 // ─── Master System Prompt ─────────────────────────────────────────────────────
 // ─── Master System Prompt ─────────────────────────────────────────────────────
@@ -119,9 +122,10 @@ export const callGemini = async (options) => {
   const userQuery = opts.userQuery || '';
   const ragContext = opts.ragContext || {};
   const conversationHistory = opts.conversationHistory || [];
+  const apiKey = getApiKey();
 
   // Always try Gemini first — even without key we show intelligent fallback
-  if (!GEMINI_API_KEY) {
+  if (!apiKey) {
     console.warn('[Gemini] No API key — using smart fallback');
     return buildSmartFallback(userQuery, ragContext);
   }
@@ -157,7 +161,7 @@ export const callGemini = async (options) => {
   let lastError = null;
 
   for (const model of GEMINI_MODELS) {
-    const url = getGeminiUrl(model);
+    const url = getGeminiUrl(model, apiKey);
     let retries = 2;
     let delay = 1000;
 
