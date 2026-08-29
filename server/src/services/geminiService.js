@@ -10,13 +10,11 @@ dotenv.config();
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 
 const GEMINI_MODELS = [
-  'gemini-2.0-flash-lite',
-  'gemini-1.5-flash-8b',
-  'gemini-1.5-flash',
-  'gemini-2.0-flash',
   'gemini-2.5-flash',
+  'gemini-2.5-pro',
   'gemini-1.5-pro',
-  'gemini-2.5-pro'
+  'gemini-2.0-flash',
+  'gemini-1.5-flash'
 ];
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -107,7 +105,12 @@ The response must feel personalized to THIS specific query, not generic.`;
 };
 
 // ─── Main Gemini API call ─────────────────────────────────────────────────────
-export const callGemini = async ({ userQuery, ragContext, conversationHistory = [] }) => {
+export const callGemini = async (options) => {
+  const opts = typeof options === 'string' ? { userQuery: options } : (options || {});
+  const userQuery = opts.userQuery || '';
+  const ragContext = opts.ragContext || {};
+  const conversationHistory = opts.conversationHistory || [];
+
   // Always try Gemini first — even without key we show intelligent fallback
   if (!GEMINI_API_KEY) {
     console.warn('[Gemini] No API key — using smart fallback');
