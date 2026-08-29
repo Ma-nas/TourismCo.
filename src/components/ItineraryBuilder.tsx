@@ -70,7 +70,13 @@ const ItineraryBuilder = () => {
   const [bookingDone, setBookingDone] = useState(false);
   const [confirmationId, setConfirmationId] = useState('');
 
-  const API = (import.meta.env.VITE_API_URL || '') + '/api';
+  const API = (() => {
+    const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+    if (!envUrl || envUrl.includes('onrender.com') || envUrl.includes('example.com') || envUrl === 'undefined') {
+      return '/api';
+    }
+    return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+  })();
 
   // Fetch options when city changes
   useEffect(() => {

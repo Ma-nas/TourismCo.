@@ -18,7 +18,8 @@ const TravelCircleDetail = () => {
   ];
 
   const handleJoin = async () => {
-    const BASE = import.meta.env.VITE_API_URL || '';
+    const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+    const BASE = (!envUrl || envUrl.includes('onrender.com') || envUrl.includes('example.com') || envUrl === 'undefined') ? '' : envUrl;
     try {
       await fetch(`${BASE}/api/circles/${circle.id}/join`, {
         method: 'POST',

@@ -19,7 +19,7 @@ dotenv.config();
 const app = express();
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ 
   origin: function (origin, callback) {
     callback(null, true);
@@ -38,16 +38,21 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// ─── Routes ──────────────────────────────────────────────────────────────────
-app.use('/api/auth', authRoutes);
-app.use('/api/destinations', destinationRoutes);
-app.use('/api/circles', circleRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/itinerary', itineraryRoutes);
-app.use('/api/bookings', bookingRoutes);
+// ─── Dual-Mount Routes (Handles both /api/... and /... on Vercel Serverless) ─
+const mountRoute = (path, router) => {
+  app.use(`/api${path}`, router);
+  app.use(path, router);
+};
+
+mountRoute('/auth', authRoutes);
+mountRoute('/destinations', destinationRoutes);
+mountRoute('/circles', circleRoutes);
+mountRoute('/ai', aiRoutes);
+mountRoute('/itinerary', itineraryRoutes);
+mountRoute('/bookings', bookingRoutes);
 
 // Health check
-app.get('/api/health', (req, res) => {
+const healthHandler = (req, res) => {
   res.json({
     success: true,
     status: 'online',
@@ -56,7 +61,9 @@ app.get('/api/health', (req, res) => {
     currency: process.env.APP_CURRENCY || 'INR',
     timestamp: new Date().toISOString()
   });
-});
+};
+app.get('/api/health', healthHandler);
+app.get('/health', healthHandler);
 
 // 404 handler
 app.use((req, res) => {

@@ -6,7 +6,14 @@ import {
   Clock, DollarSign, Star, Trash2, Calendar
 } from 'lucide-react';
 
-const API = (import.meta.env.VITE_API_URL || '') + '/api';
+const getApiBase = () => {
+  const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+  if (!envUrl || envUrl.includes('onrender.com') || envUrl.includes('example.com') || envUrl === 'undefined') {
+    return '/api';
+  }
+  return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+};
+const API = getApiBase();
 const USER_ID = `user_${Math.random().toString(36).slice(2, 9)}`;
 
 // ── Place images — all city aliases covered ───────────────────────────────────
@@ -417,6 +424,11 @@ const WanderChat = () => {
 
       clearInterval(phaseInterval);
 
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.message || `Server returned status ${res.status}`);
+      }
+
       const data = await res.json();
       // Image: try all matched destinations, then the raw user query text
       const allDests: string[] = data?.constraints?.allDestinations || [];
@@ -435,12 +447,12 @@ const WanderChat = () => {
         hiddenGems: data?.hiddenGems || null,
         timestamp: new Date(),
       }]);
-    } catch (err) {
+    } catch (err: any) {
       clearInterval(phaseInterval);
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "⚠️ Couldn't reach the AI server. Please check your connection or ensure GEMINI_API_KEY is configured in your Vercel settings.",
+        content: `⚠️ Couldn't reach the AI server (${err?.message || 'Network Error'}). Please check your connection or ensure GEMINI_API_KEY is configured in your Vercel settings.`,
         timestamp: new Date(),
       }]);
     } finally {
