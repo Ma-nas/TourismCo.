@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
-const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api';
+const API = (import.meta.env.VITE_API_URL || '') + '/api';
 
 interface User { id: string; name: string; email: string; interests: string[]; }
 interface AuthCtx {

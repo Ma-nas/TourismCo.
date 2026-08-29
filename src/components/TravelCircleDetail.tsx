@@ -18,7 +18,7 @@ const TravelCircleDetail = () => {
   ];
 
   const handleJoin = async () => {
-    const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const BASE = import.meta.env.VITE_API_URL || '';
     try {
       await fetch(`${BASE}/api/circles/${circle.id}/join`, {
         method: 'POST',

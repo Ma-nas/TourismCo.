@@ -6,7 +6,7 @@ import {
   Clock, DollarSign, Star, Trash2, Calendar
 } from 'lucide-react';
 
-const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api';
+const API = (import.meta.env.VITE_API_URL || '') + '/api';
 const USER_ID = `user_${Math.random().toString(36).slice(2, 9)}`;
 
 // ── Place images — all city aliases covered ───────────────────────────────────
@@ -440,7 +440,7 @@ const WanderChat = () => {
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "⚠️ Couldn't reach the server. Make sure the backend is running:\n\ncd server\nnpm run dev",
+        content: "⚠️ Couldn't reach the AI server. Please check your connection or ensure GEMINI_API_KEY is configured in your Vercel settings.",
         timestamp: new Date(),
       }]);
     } finally {
