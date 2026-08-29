@@ -21,51 +21,60 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const getGeminiUrl = (model) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
 
 // ─── Master System Prompt ─────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `You are TourismCo. AI — an expert travel planner specializing in Uttar Pradesh, India.
+// ─── Master System Prompt ─────────────────────────────────────────────────────
+const SYSTEM_PROMPT = `You are TourismCo. AI — a hyper-knowledgeable, warm, and deeply cultured local travel companion specializing in Uttar Pradesh, India.
 
-CRITICAL RULES — ALWAYS FOLLOW:
-1. READ THE FULL USER QUERY. Never ignore any detail the user mentions.
-2. If user mentions MULTIPLE cities (e.g. "Varanasi and Prayagraj"), plan for ALL of them.
-3. Use the EXACT budget the user states. Never substitute a different amount.
-4. Use the EXACT number of days, people, and preferences mentioned.
-5. If user says "vegetarian" — never suggest non-veg food.
-6. If user says "family" or N members — plan for that group size.
-7. If user asks for "hidden gems" or "local food" — always include them prominently.
-8. If user asks for "heritage" — focus on forts, temples, monuments, museums.
+CRITICAL FORMATTING & SYNTAX CONSTRAINTS — MANDATORY:
+1. ABSOLUTELY NO MARKDOWN HASHES (#, ##, ###, ####). Never start any line with a hash symbol.
+2. ABSOLUTELY NO MARKDOWN ASTERISKS (*, **, ***). Never enclose text in asterisks for bolding or italics, and never use asterisks for bullet points.
+3. Use plain readable text, clean capitalization for headers, clear line breaks, and emoji visual anchors (e.g., 📍 DESTINATION, 🗓️ DAY 1, 🌅 Morning, ☕ Breakfast, 🏛️ Exploration, 🍛 Lunch, 🌇 Evening & Sunset, 🍢 Street Treats, 🌙 Dinner, 💡 Smart Route & Crowd Hacks).
+4. Use • or - for bullet points.
 
-CRITICAL INSTRUCTION: You MUST start every response with a visible thinking process enclosed in <think> tags.
-Analyze the user's constraints, state what you understand about their trip (destinations, days, budget, people, preferences), outline your plan, and then close the </think> tag before providing the final response.
+CRITICAL CONTENT & TONE RULES:
+1. HUMANIZED & CONVERSATIONAL: Write warmly and personally, like a seasoned local friend walking them through the city. Explain the "why" and share insider stories rather than giving cold mechanical lists.
+2. MULTI-OPTION FLEXIBILITY: For activities, meals, and viewpoints, always provide thoughtful options (e.g. Option 1: Classic & Heritage vs Option 2: Casual & Offbeat, or Vegetarian vs Non-Veg alternatives).
+3. SMART VISIT MANAGEMENT & CROWD HACKS:
+   - Provide exact timing recommendations (e.g., 5:45 AM sunrise gate entry to beat 2-hour lines).
+   - Detail gate advice (e.g. East Gate vs West Gate, avoid Friday closures, book ASI tickets online on your phone 24 hours prior).
+   - Group visits geographically so travelers move in a straight line without criss-crossing the city in traffic.
+4. COMPLETE DAY-BY-DAY MEAL SUGGESTIONS:
+   - For every single day, include specific named places & dishes for:
+     • ☕ Breakfast: Local breakfast legend with exact dish name (e.g. Bedai-Aloo, Jalebi-Kachori)
+     • 🍛 Lunch: 2 distinct options (e.g. Heritage Thali / Classic Dhaba vs Comfortable AC restaurant)
+     • 🍢 Evening Snack & Chai: Authentic local tea stall & street food
+     • 🌙 Dinner: Atmospheric dining spot with signature specialties
+5. ADHERE TO USER CONSTRAINTS: Respect all cities, exact budget, group size, and dietary restrictions (if vegetarian, NEVER suggest non-veg).
 
-RESPONSE FORMAT — ALWAYS follow this structure:
-<think>
-Reading query: [User's raw query]
-Understanding constraints: [List destinations, budget, days, group size, preferences]
-Plan: [Briefly outline the itinerary structure]
-</think>
-
-Start with a brief warm summary line that mentions: all destinations, days, budget, group size.
-Then give a day-wise itinerary (Day 1, Day 2, etc.) with morning/afternoon/evening slots.
-For each day, mention specific named places, not generic descriptions.
-Include at least 2 "🔮 Hidden Gem" spots per destination (places tourists miss).
-Include at least 2 "🍽️ Local Food" recommendations per destination.
-End with a quick cost breakdown and 3 booking tips.
+CRITICAL INSTRUCTION FOR THINKING:
+Start your response with a visible thinking process enclosed in <think> tags.
+Analyze the user's constraints, state what you understand about their trip (destinations, days, budget, people, preferences), outline your strategy, and close the </think> tag before the final itinerary.
 
 DESTINATIONS YOU KNOW DEEPLY:
-- Varanasi (also Banaras/Kashi): Ghats, Kashi Vishwanath, Sarnath, Dashashwamedh aarti, Manikarnika, Assi Ghat, street food (tamatar chaat, kachori, lassi, malaiyyo)
-- Agra: Taj Mahal, Agra Fort, Fatehpur Sikri, Mehtab Bagh, Chini Ka Rauza (hidden gem), petha sweets, bedai-sabzi breakfast
-- Lucknow: Bara Imambara, Rumi Darwaza, Hazratganj, Tunday Kababi, galouti kebab, Wahid Biryani, Safed Baradari (hidden gem)
-- Mathura/Vrindavan: Krishna Janmabhoomi, Banke Bihari, Govardhan, Prem Mandir, dubki wale aloo, Brijwasi peda
-- Prayagraj: Triveni Sangam, Allahabad Fort, Akshayavat (hidden gem inside fort), Anand Bhavan, El Chico restaurant, Katra Bazaar malai paan
-- Ayodhya: Ram Mandir, Hanuman Garhi, Ram Ki Paidi, Nageshwarnath Temple (hidden gem), Saryu ghat kulhad chai
+- Varanasi (Banaras/Kashi): Dashashwamedh, Kashi Vishwanath (use Gate 4 VIP line if crowded), Assi Ghat morning subah-e-banaras, Sarnath, Manikarnika, Kashi Chat Bhandar tamatar chaat, Deena Chaat bhuja, Blue Lassi, Rajbandhu kulhad lassi, Shreeji sweets Malaiyyo.
+- Agra: Taj Mahal (Sunrise East Gate entry, avoid Friday closure), Agra Fort (combine with Amar Singh Gate entry), Fatehpur Sikri (Buland Darwaza & Salim Chishti Dargah), Mehtab Bagh sunset, Chini Ka Rauza & Ram Bagh (hidden gems with zero crowd), Shankar Sweets bedai-aloo, Devilal Petha Noori Gate (Angoori & Paan petha), Pinch of Spice, Dasaprakash.
+- Lucknow: Bara & Chhota Imambara (Bhool Bhulaiya), Rumi Darwaza, British Residency, Hazratganj evening ganjing, Tunday Kababi Aminabad, Dastarkhwan, Wahid Biryani, Royal Cafe basket chaat, Prakash Kulfi, Safed Baradari.
+- Mathura & Vrindavan: Banke Bihari (arrive at 7:30 AM before darshan rush), Prem Mandir evening light show, Krishna Janmabhoomi, Govardhan Parikrama, ISKCON, Brijwasi peda, Shankar Mithaiwala dubki aloo.
+- Prayagraj: Triveni Sangam (boat from Qila Ghat), Allahabad Fort Akshayavat, Anand Bhavan, Khusro Bagh, El Chico Restaurant, Netram Mulchand jalebi-kachori, Katra Bazaar malai paan.
+- Ayodhya: Ram Janmabhoomi Mandir (early morning 6:30 AM slot), Hanuman Garhi, Kanak Bhawan, Ram Ki Paidi evening aarti, Saryu boat ride, Nageshwarnath Temple, Chandra Bakery, Maurya Mishthan Bhandar mawa kachori.`;
 
-BUDGET INTELLIGENCE:
-- Under ₹10,000: hostels, dhabas, trains, shared autos
-- ₹10,000–30,000: budget hotels, mix of restaurants and street food, AC sleeper trains
-- ₹30,000–60,000: 3-star hotels, guided tours, Ola/Uber cabs
-- ₹60,000+: heritage hotels, private cars, fine dining
-
-Always respond in a warm, expert, helpful tone. Use emojis sparingly for section headers only.
-Keep responses detailed but scannable. Use bullet points for places and food.`;
+// ─── Sanitizer to strip markdown hashes and asterisks ─────────────────────────
+export const sanitizeOutput = (text) => {
+  if (!text) return '';
+  return text
+    // Remove markdown headers (#, ##, ###, ####)
+    .replace(/^#{1,6}\s*/gm, '')
+    // Remove triple, double, and single bold/italic asterisks
+    .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    // Remove asterisks used for list bullets
+    .replace(/^\s*\*\s+/gm, '• ')
+    // Normalize dividers
+    .replace(/^---+$/gm, '────────────────────────────────────────')
+    // Clean excessive empty lines
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
 
 // ─── Build user message with full context ────────────────────────────────────
 const buildUserMessage = (userQuery, ragContext) => {
@@ -199,8 +208,11 @@ export const callGemini = async (options) => {
           text = text.replace(/<think>[\s\S]*?<\/think>/, '').trim();
         }
 
-        console.log(`[Gemini] ✅ Response received from ${model}, length:`, text.length);
-        return { text, thinking, source: 'gemini', model: model };
+        // Apply strict sanitization to guarantee NO markdown hashes (#) or asterisks (**)
+        const cleanText = sanitizeOutput(text);
+
+        console.log(`[Gemini] ✅ Response received from ${model}, length:`, cleanText.length);
+        return { text: cleanText, thinking, source: 'gemini', model: model };
 
       } catch (err) {
         console.error(`[Gemini] ${model} Request failed:`, err.message);
@@ -248,39 +260,59 @@ const buildSmartFallback = (userQuery, ragContext) => {
 
   // Spot databases
   const spots = {
-    Varanasi:  ['Dashashwamedh Ghat','Kashi Vishwanath Temple','Manikarnika Ghat','Assi Ghat','Sarnath','Ramnagar Fort'],
-    Prayagraj: ['Triveni Sangam','Allahabad Fort','Anand Bhavan','Khusro Bagh','Akshayavat (inside fort)','Minto Park'],
-    Agra:      ['Taj Mahal','Agra Fort','Fatehpur Sikri','Mehtab Bagh','Chini Ka Rauza'],
-    Lucknow:   ['Bara Imambara','Rumi Darwaza','Chhota Imambara','Hazratganj','Chattar Manzil'],
-    Mathura:   ['Krishna Janmabhoomi','Banke Bihari Temple','Prem Mandir','Govardhan Hill','ISKCON Vrindavan'],
-    Ayodhya:   ['Ram Janmabhoomi','Hanuman Garhi','Ram Ki Paidi','Kanak Bhawan','Nageshwarnath Temple'],
-    Sarnath:   ['Dhamek Stupa','Sarnath Museum','Ashoka Pillar','Mulagandhakuti Vihara'],
-  };
-  const vegFood = {
-    Varanasi:  ['Kashi Chat Bhandar (tamatar chaat)','Vishwanath Gali Jalebi-Kachori (6-9AM)','Sri Rajbandhu Lassi in kulhad','Malaiyyo dessert (winter)'],
-    Prayagraj: ['El Chico Restaurant (tehri)','Bade Hanuman Prasad stall (puri-halwa)','Singh Brothers Chaat (Lukerganj)','Malai Paan at Katra Bazaar'],
-    Agra:      ['Devilal Petha (Noori Gate)','Shankar Sweets bedai-puri breakfast','Joney\'s Place banana shake','Pinch of Spice (veg thali)'],
-    Lucknow:   ['Shukla Chatth Wale (Aminabad chaat)','Prakash Kulfi (Hazratganj)','Vaishali Restaurant (veg)','Royal Café (heritage veg)'],
-    Mathura:   ['Brijwasi Sweets peda','Dubki wale aloo (7-11AM only)','Vrindavan gali chilla','Radha Bihari Sweets'],
-    Ayodhya:   ['Ghanshyam Halwai mawa kachori','Saryu Ghat kulhad chai','Ram Ki Paidi prasad','Sugar Pan sweets'],
-  };
-  const hiddenSpots = {
-    Varanasi:  ['🔮 Lalita Ghat & Dutch Cemetery (zero crowds)','🔮 Bharatmata Temple (marble relief map, no idol)','🔮 Chet Singh Ghat at night (secret aarti view)'],
-    Prayagraj: ['🔮 Akshayavat & Patalpuri (underground temple inside Allahabad Fort)','🔮 Minto Park boat (₹50 vs ₹500 at Sangam)','🔮 Chhatnag Yamuna bank (river dolphins)'],
-    Agra:      ['🔮 Chini Ka Rauza (Persian tile tomb, 1km from Taj, almost empty)','🔮 Ram Bagh — oldest Mughal garden in India (1508)','🔮 Taj Nature Walk (peacocks, free of tourists)'],
-    Lucknow:   ['🔮 Safed Baradari (white marble pavilion, 15th century, deserted)','🔮 Husainabad Clock Tower at night with local chai','🔮 Lohia Park evening fountain show (locals only)'],
-    Mathura:   ['🔮 Vishram Ghat at 4 AM — boat ride before crowds','🔮 Dauji Temple, Baldeo (25km, locals pilgrimage)','🔮 Kans Qila ruins on Yamuna bank'],
-    Ayodhya:   ['🔮 Swarg Dwar Ghat (sacred cremation site, no tourists)','🔮 Treta Ka Thakur Temple — idol made from 1000yr old coal','🔮 Nageshwarnath — Ayodhya\'s oldest temple, built by Kush'],
+    Varanasi:  ['Dashashwamedh Ghat sunrise boat ride','Kashi Vishwanath Temple corridor','Manikarnika Ghat evening walk','Assi Ghat morning Subah-e-Banaras','Sarnath Stupa & Museum','Ramnagar Fort across river'],
+    Prayagraj: ['Triveni Sangam holy dip','Allahabad Fort & Akshayavat','Anand Bhavan heritage home','Khusro Bagh gardens','Minto Park Yamuna view','Chandrashekhar Azad Park'],
+    Agra:      ['Taj Mahal sunrise visit','Agra Fort royal chambers','Fatehpur Sikri ghost city','Mehtab Bagh sunset viewpoint','Chini Ka Rauza Persian tomb','Itimad-ud-Daulah baby Taj'],
+    Lucknow:   ['Bara Imambara & Bhool Bhulaiya','Rumi Darwaza & Clock Tower','Chhota Imambara chandeliers','Hazratganj heritage lane','Chattar Manzil & Residency','La Martiniere College'],
+    Mathura:   ['Krishna Janmabhoomi temple complex','Banke Bihari Temple Vrindavan','Prem Mandir evening musical fountain','Govardhan Hill parikrama','ISKCON Temple aarti'],
+    Ayodhya:   ['Ram Janmabhoomi Mandir morning darshan','Hanuman Garhi 76 steps','Ram Ki Paidi grand evening aarti','Kanak Bhawan palace temple','Nageshwarnath Temple'],
+    Sarnath:   ['Dhamek Stupa & deer park','Sarnath Archaeological Museum','Ashoka Pillar site','Mulagandhakuti Vihara'],
   };
 
-  // Build thinking chain
-  const prefs = [];
-  if (isVeg) prefs.push('vegetarian food');
-  if (isHeritage) prefs.push('heritage & historical sites');
-  if (isFood) prefs.push('local food experiences');
-  if (c.prefs?.spiritual) prefs.push('spiritual & temple visits');
-  if (c.prefs?.adventure) prefs.push('adventure activities');
-  if (c.prefs?.luxury) prefs.push('luxury experience');
+  const breakfastOptions = {
+    Agra:      ['Option 1: Shankar Sweets (Pratap Nagar) for piping hot Bedai Puri with spicy Aloo Sabzi and Jalebi', 'Option 2: Joney\'s Place near Taj South Gate for hearty banana pancakes and masala chai'],
+    Varanasi:  ['Option 1: Vishwanath Gali Halwai for fresh hot Kachori-Sabzi and Jalebi', 'Option 2: Assi Ghat cafe for apple pie, ginger lemon honey tea and Subah-e-Banaras vibes'],
+    Lucknow:   ['Option 1: Netram / Bajpai Kachori Bhandar (Hazratganj) for crispy Poori-Chhole and lassi', 'Option 2: Sharma Tea Stall (Lalbagh) for Bun-Makkhan and saffron Kulhad Chai'],
+    Mathura:   ['Option 1: Shankar Mithaiwala for Dubki wale Aloo with crisp kachoris', 'Option 2: Brijwasi Sweets for fresh rabri-jalebi and hot milk'],
+    Prayagraj: ['Option 1: Netram Mulchand & Sons (Katra) for pure desi ghee Kachori-Thali', 'Option 2: Loknath Gali breakfast stall for Dahi-Jalebi'],
+    Ayodhya:   ['Option 1: Maurya Mishthan Bhandar for spicy Mawa Kachori and Bedmi Puri', 'Option 2: Saryu Ghat Tea Stall for roasted chana and kulhad ginger chai'],
+  };
+
+  const lunchOptions = {
+    Agra:      ['Option 1 (Heritage local): Pinch of Spice (Wazirpura) for rich paneer lababdar / dal makhani', 'Option 2 (Casual budget): Dasaprakash or Shankara Vegis rooftop overlooking Taj'],
+    Varanasi:  ['Option 1 (Traditional): Keshari Restaurant near Godowlia for a grand Banarasi Thali', 'Option 2 (Cafe chill): Brown Bread Bakery for organic artisanal pizzas and rooftop breeze'],
+    Lucknow:   ['Option 1 (Legendary Awadhi): Tunday Kababi (Aminabad) or Dastarkhwan (Lalbagh)', 'Option 2 (Vegetarian): Royal Cafe (Hazratganj) for the famous Giant Basket Chaat'],
+    Mathura:   ['Option 1 (Sattvic Thali): Govinda\'s Restaurant inside ISKCON complex', 'Option 2 (Brij Special): Brijwasi Mithaiwala for stuffed parathas and sweet lassi'],
+    Prayagraj: ['Option 1 (Heritage dining): El Chico Restaurant (Civil Lines) for royal Awadhi curries', 'Option 2 (Quick bite): Sagar Ratna for South Indian dosas and filter coffee'],
+    Ayodhya:   ['Option 1 (Temple Prasad & Thali): Kanak Rasoi for pure sattvic temple thali', 'Option 2 (Modern family): Makhan Malai Restaurant for north Indian combos'],
+  };
+
+  const snackOptions = {
+    Agra:      ['Devilal Petha Store (Noori Gate) for Angoori & Kesar Petha with hot kulhad chai', 'Chaat Gali at Sadar Bazaar for Agra Bhalla (crispy potato patties)'],
+    Varanasi:  ['Kashi Chat Bhandar (Godowlia) for signature Tamatar Chaat and Palak Patta chaat', 'Rajbandhu Sweets for thick creamy Lassi served in earthenware kulhad'],
+    Lucknow:   ['Shukla Chaat House (Hazratganj) for Matar ki Chaat and Dahi Batasha', 'Prakash Kulfi (Aminabad) for pure saffron Falooda Kulfi'],
+    Mathura:   ['Radha Bihari Sweets for fresh Mathura Ke Pede and warm saffron milk', 'Banke Bihari Gali for roasted spicy Hing Kachori with tangy chutney'],
+    Prayagraj: ['Singh Brothers Chaat (Lukerganj) for Dahi-Sonth Papdi Chaat', 'Katra Bazaar paan shop for royal melting Malai Paan'],
+    Ayodhya:   ['Ram Ki Paidi street vendors for steaming Saryu Kulhad Chai and Samosa', 'Chandra Sweets for famous hot Balushahi'],
+  };
+
+  const dinnerOptions = {
+    Agra:      ['Option 1: The Charcoal Chimney or Peshawri for candle-lit tandoori platters', 'Option 2: Joney\'s Place or Tea\'se Me for a relaxed rooftop dinner under the night sky'],
+    Varanasi:  ['Option 1: Dolphin Rooftop Restaurant overlooking Man Mandir Ghat and lighted river', 'Option 2: Baati Chokha (Teliyabag) for authentic village-style roasted litti chokha in clay pots'],
+    Lucknow:   ['Option 1: Falak Numa rooftop at Hotel Clarks Avadh for live ghazals and royal Biryani', 'Option 2: Wahid Biryani (Aminabad) for classic Dum Biryani and roomali rotis'],
+    Mathura:   ['Option 1: 11 Flowers Rooftop Restaurant in Vrindavan for panoramic temple spires', 'Option 2: Brijwasi Royal Restaurant for rich Brij delicacies'],
+    Prayagraj: ['Option 1: Eat On (Civil Lines) for succulent rolls and tandoori specials', 'Option 2: Hot Stuff (Civil Lines) for comforting wood-fired pizzas and milkshakes'],
+    Ayodhya:   ['Option 1: Shri Kanak Sarkar Rasoi for peaceful temple ambience and unlimited thali', 'Option 2: Awadh Royale for modern multi-cuisine dishes'],
+  };
+
+  const smartHacks = {
+    Agra:      ['Arrive at Taj Mahal East Gate at 5:45 AM to enter first and avoid 2-hour lines. Note that Taj Mahal is strictly closed every Friday.', 'Buy combo ASI monument tickets online 24h prior on your phone to skip ticket counters completely.', 'Take an electric e-rickshaw (₹50-100) between Taj Mahal and Agra Fort; it avoids tourist parking traps.'],
+    Varanasi:  ['Book your morning boat ride at Assi Ghat the previous evening for ₹300-500 instead of paying inflated morning rates.', 'Visit Kashi Vishwanath via Gate 4 during Sugam Darshan afternoon slots for quickest entry without stampedes.', 'Navigate narrow Godowlia galis on foot or cycle rickshaw rather than getting stuck in car traffic.'],
+    Lucknow:   ['Buy a single composite ticket at Bara Imambara that grants free entry to Chhota Imambara and Picture Gallery.', 'Visit British Residency in the afternoon when trees provide pleasant shade and peaceful breeze.', 'Take an evening stroll down Hazratganj (Ganjing) when Victorian streetlamps light up and cafes come alive.'],
+    Mathura:   ['Visit Banke Bihari temple right when morning doors open (7:45 AM) or after 5:30 PM to avoid suffocating mid-day crowds.', 'Hire a shared electric auto for the Mathura-Vrindavan stretch (₹20 per seat) rather than private cabs.'],
+    Prayagraj: ['Take a government-rate boat from Qila Ghat instead of unauthorized hawkers at Sangam nose for fixed safe pricing.', 'Visit Allahabad Fort Akshayavat and Patalpuri underground temple between 9:00 AM and 3:00 PM.'],
+    Ayodhya:   ['Book your Ram Janmabhoomi Darshan slot online to enter through the fast-track pilgrim queue.', 'Head to Ram Ki Paidi by 6:00 PM to secure the best front steps for the magnificent laser & sound evening aarti.'],
+  };
 
   const thinking = [
     `Reading query: "${userQuery}"`,
@@ -290,67 +322,77 @@ const buildSmartFallback = (userQuery, ragContext) => {
     `• Duration: ${days} days`,
     `• Budget: ₹${budget.toLocaleString('en-IN')} total`,
     `• Group: ${travelers} ${travelers === 1 ? 'person' : 'people'} (${c.travelType || 'not specified'})`,
-    prefs.length > 0 ? `• Preferences: ${prefs.join(', ')}` : '',
-    ``,
-    `Plan:`,
-    multiCity ? `• Split ${days} days across ${dests.length} cities: ${dests.map((d,i) => `${d} (${daysPerCity[i]}d)`).join(', ')}` : `• Full ${days} days in ${dests[0]}`,
-    `• Budget per person: ~₹${Math.round(budget / travelers).toLocaleString('en-IN')}`,
-    `• Include hidden gems and local food spots for each city`,
-    `• Generate 3 itinerary tiers: Budget, Balanced, Premium`,
+    `• Format: Plain text, no markdown hashes/asterisks, full morning-afternoon-evening-dinner meal suggestions with smart visit management`,
   ].filter(Boolean).join('\n');
 
-  let reply = `✅ Perfect! Here's your **${days}-day trip plan** covering **${dests.join(' + ')}** for **${travelers} ${travelers === 1 ? 'person' : 'people'}** within **₹${budget.toLocaleString('en-IN')}** ${isVeg ? '(vegetarian)' : ''} ${isHeritage ? '| Heritage focus' : ''}\n\n`;
+  let reply = `Welcome! Here is your carefully crafted ${days}-day personalized itinerary covering ${dests.join(' and ')} for ${travelers} ${travelers === 1 ? 'person' : 'people'} within ₹${budget.toLocaleString('en-IN')} total budget.\n\n`;
 
   let dayCount = 1;
   dests.forEach((dest, di) => {
     const destDays = daysPerCity[di];
-    const destSpots = spots[dest] || [`${dest} main temple`, `${dest} fort`, `${dest} market`];
-    const destFood  = (isVeg || true) ? (vegFood[dest] || [`Local ${dest} thali`]) : (vegFood[dest] || []);
-    const destHidden = hiddenSpots[dest] || [];
+    const destSpots = spots[dest] || [`${dest} main temple`, `${dest} heritage fort`, `${dest} riverbank view`, `${dest} cultural bazaar`];
+    const destBreakfast = breakfastOptions[dest] || ['Local breakfast cafe for fresh regional specialties'];
+    const destLunch = lunchOptions[dest] || ['Option 1: Traditional thali restaurant | Option 2: Comfortable modern cafe'];
+    const destSnack = snackOptions[dest] || ['Famous local tea stall for kulhad chai and regional snack'];
+    const destDinner = dinnerOptions[dest] || ['Option 1: Atmospheric rooftop restaurant | Option 2: Heritage family eatery'];
+    const destHacks = smartHacks[dest] || ['Pre-book all entry passes online to bypass queues and start visits before 8 AM for best experience.'];
 
-    reply += `---\n## 📍 ${dest} (${destDays} ${destDays === 1 ? 'day' : 'days'})\n\n`;
+    reply += `📍 ${dest.toUpperCase()} (${destDays} ${destDays === 1 ? 'Day' : 'Days'})\n`;
+    reply += `────────────────────────────────────────\n\n`;
 
     for (let d = 0; d < destDays; d++) {
-      const isFirstDay = d === 0 && di === 0;
-      const isLastDay  = d === destDays - 1 && di === dests.length - 1;
-      reply += `**Day ${dayCount}${isFirstDay ? ' — Arrival' : isLastDay ? ' — Departure' : ''}**\n`;
-      reply += `• 🌅 Morning: ${destSpots[d * 2] || destSpots[0]}\n`;
-      reply += `• ☀️ Afternoon: ${destSpots[d * 2 + 1] || destSpots[1]}\n`;
-      reply += `• 🌙 Evening: ${d === 0 ? 'Settle in, Ganga aarti / local evening walk' : destSpots[d + 2] || 'Local market & street food'}\n`;
-      if (destHidden[d]) reply += `• ${destHidden[d]}\n`;
-      reply += '\n';
+      const morningSpot = destSpots[d * 2] || destSpots[0];
+      const afternoonSpot = destSpots[d * 2 + 1] || destSpots[1];
+      const eveningSpot = destSpots[d * 2 + 2] || destSpots[2] || 'Scenic sunset viewpoint and heritage walk';
+
+      reply += `🗓️ DAY ${dayCount} — ${dest.toUpperCase()} EXPLORATION\n\n`;
+      reply += `🌅 Morning Activity (06:00 AM - 09:00 AM)\n`;
+      reply += `• Experience: ${morningSpot}\n`;
+      reply += `• Crowd Strategy: Arrive early at opening to enjoy serene atmosphere and capture beautiful uncrowded photos.\n\n`;
+
+      reply += `☕ Breakfast Recommendation (09:00 AM - 10:00 AM)\n`;
+      destBreakfast.forEach(b => { reply += `• ${b}\n`; });
+      reply += `\n`;
+
+      reply += `🏛️ Mid-Day Exploration (10:30 AM - 01:30 PM)\n`;
+      reply += `• Visit: ${afternoonSpot}\n`;
+      reply += `• Route Tip: This site is grouped geographically with your morning stop to minimize transfer time across town.\n\n`;
+
+      reply += `🍛 Lunch Suggestions (01:30 PM - 03:00 PM)\n`;
+      destLunch.forEach(l => { reply += `• ${l}\n`; });
+      reply += `\n`;
+
+      reply += `🌇 Late Afternoon & Sunset (04:00 PM - 06:30 PM)\n`;
+      reply += `• Highlight: ${eveningSpot}\n`;
+      reply += `• Secret Viewpoint: Catch the golden hour light reflections as the sun begins to set over the historic skyline.\n\n`;
+
+      reply += `🍢 Evening Snack & Kulhad Chai (06:30 PM - 07:30 PM)\n`;
+      destSnack.forEach(s => { reply += `• ${s}\n`; });
+      reply += `\n`;
+
+      reply += `🌙 Dinner & Night Atmosphere (08:00 PM - 10:00 PM)\n`;
+      destDinner.forEach(din => { reply += `• ${din}\n`; });
+      reply += `\n────────────────────────────────────────\n\n`;
+
       dayCount++;
     }
 
-    if (isFood || isHeritage) {
-      reply += `**🍽️ Must-eat in ${dest}:**\n`;
-      destFood.slice(0, 3).forEach(f => { reply += `• ${f}\n`; });
-      reply += '\n';
-    }
+    reply += `💡 SMART VISIT MANAGEMENT & CROWD HACKS FOR ${dest.toUpperCase()}:\n`;
+    destHacks.forEach(h => { reply += `• ${h}\n`; });
+    reply += `\n`;
   });
-
-  // Hidden gems section
-  if (gems) {
-    reply += `---\n## 🔮 Hidden Gems (locals-only spots)\n`;
-    const allHidden = [...(gems.hiddenPlaces || [])].slice(0, 3);
-    allHidden.forEach(g => {
-      reply += `• **${g.name}**: ${g.why.slice(0, 100)} _(Best time: ${g.timing})_\n`;
-    });
-    reply += '\n';
-  }
 
   // Cost breakdown
   const perPerson = Math.round(budget / travelers);
-  reply += `---\n## 💰 Budget Breakdown (~₹${budget.toLocaleString('en-IN')} total)\n`;
-  reply += `• Accommodation: ~₹${Math.round(budget * 0.35).toLocaleString('en-IN')}\n`;
-  reply += `• Food: ~₹${Math.round(budget * 0.25).toLocaleString('en-IN')}\n`;
-  reply += `• Transport: ~₹${Math.round(budget * 0.20).toLocaleString('en-IN')}\n`;
-  reply += `• Entry + Activities: ~₹${Math.round(budget * 0.15).toLocaleString('en-IN')}\n`;
-  reply += `• Miscellaneous: ~₹${Math.round(budget * 0.05).toLocaleString('en-IN')}\n`;
-  reply += `• Per person: ~₹${perPerson.toLocaleString('en-IN')}\n\n`;
+  reply += `💰 ESTIMATED BUDGET BREAKDOWN (₹${budget.toLocaleString('en-IN')} Total for ${travelers} ${travelers === 1 ? 'person' : 'people'})\n`;
+  reply += `• Accommodation (Clean 3-star / Heritage stay): ~₹${Math.round(budget * 0.38).toLocaleString('en-IN')}\n`;
+  reply += `• Meals, Breakfast, Snacks & Beverages: ~₹${Math.round(budget * 0.26).toLocaleString('en-IN')}\n`;
+  reply += `• Local Transit (E-rickshaws, autos, app cabs): ~₹${Math.round(budget * 0.18).toLocaleString('en-IN')}\n`;
+  reply += `• Monument Entry & Activity Passes: ~₹${Math.round(budget * 0.12).toLocaleString('en-IN')}\n`;
+  reply += `• Emergency Buffer & Souvenirs: ~₹${Math.round(budget * 0.06).toLocaleString('en-IN')}\n`;
+  reply += `• Average Per Person: ~₹${perPerson.toLocaleString('en-IN')}\n\n`;
 
-  reply += `📌 **Booking tips:** Book IRCTC trains at least 2 weeks early. Check Booking.com for ₹800–2,000/night guesthouses. Use Ola/Rapido in all these cities.\n`;
-  reply += `\n👇 Scroll down to see your 3 customized itinerary plans (Budget / Balanced / Premium) with day-wise schedules and booking links!`;
+  reply += `Have a wonderful and smooth journey! Let me know if you would like me to adjust pace, budget, or dining preferences.`;
 
-  return { text: reply, thinking, source: 'fallback', model: 'local-kb' };
+  return { text: sanitizeOutput(reply), thinking, source: 'fallback', model: 'local-kb' };
 };
