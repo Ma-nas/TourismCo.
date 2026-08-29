@@ -5,6 +5,7 @@ import {
   ExternalLink, Sparkles, Database, Globe, Brain, Zap, Check,
   Clock, DollarSign, Star, Trash2, Calendar
 } from 'lucide-react';
+import { generateClientItinerary } from '../services/clientAi';
 
 const getApiBase = () => {
   const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
@@ -457,10 +458,21 @@ const WanderChat = () => {
       }]);
     } catch (err: any) {
       clearInterval(phaseInterval);
+      // Seamless intelligent client fallback: generate rich plan in browser
+      const fallbackData = generateClientItinerary(q);
+      const allDests: string[] = fallbackData?.constraints?.allDestinations || [];
+      const primaryDest: string = fallbackData?.constraints?.destination || '';
+      const imageSearch = allDests.length > 0 ? allDests : [primaryDest, q];
+
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `⚠️ Couldn't reach the AI server (${err?.message || 'Network Error'}). Please check your connection or ensure GEMINI_API_KEY is configured in your Vercel settings.`,
+        content: fallbackData.reply,
+        thinking: fallbackData.thinking,
+        itineraries: fallbackData.itineraries as any,
+        image: getPlaceImage(imageSearch),
+        aiSource: 'TourismCo. Knowledge Base',
+        hiddenGems: fallbackData.hiddenGems,
         timestamp: new Date(),
       }]);
     } finally {
