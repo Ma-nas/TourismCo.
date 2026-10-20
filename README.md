@@ -1,135 +1,152 @@
-<div align="center">
-  <img src="public/favicon.ico" alt="TourismCo Logo" width="80" height="80">
-  <h1>✈️ TourismCo. AI</h1>
-  <p><strong>The Intelligent, AI-Powered Travel OS for Uttar Pradesh</strong></p>
+﻿<div align="center">
 
-  [![Status](https://img.shields.io/badge/Status-Production_Ready-success?style=for-the-badge)](#)
-  [![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)](#)
-  [![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](#)
-  [![Google Gemini](https://img.shields.io/badge/Google_Gemini-AI-4285F4?style=for-the-badge&logo=google&logoColor=white)](#)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](#)
+# TourismCo. AI
 
-  <p align="center">
-    <a href="#-overview">Overview</a> •
-    <a href="#-demo">Demo</a> •
-    <a href="#-core-features">Features</a> •
-    <a href="#-ai--rag-architecture">Architecture</a> •
-    <a href="#-getting-started">Getting Started</a>
-  </p>
+### Intelligent Travel Operating System and RAG Itinerary Engine for Uttar Pradesh
+
+[![Status](https://img.shields.io/badge/Status-Production_Ready-brightgreen?style=flat-square)](#)
+[![React](https://img.shields.io/badge/React-18%2F19-61DAFB?style=flat-square&logo=react&logoColor=black)](#)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](#)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?style=flat-square&logo=nodedotjs&logoColor=white)](#)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-1.5_Flash-4285F4?style=flat-square&logo=google&logoColor=white)](#)
+[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.x-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](#)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+
+[Platform Overview](#platform-overview) | [RAG Architecture](#rag-architecture) | [Core Capabilities](#core-capabilities) | [Quick Start](#quick-start) | [API & Telemetry](#api--telemetry)
+
 </div>
 
-<br/>
+---
 
-## 📖 Overview
+## Platform Overview
 
-**TourismCo. AI** is a premium, next-generation travel planning platform designed to modernize tourism in **Uttar Pradesh, India**. Moving beyond generic LLM chatbots, TourismCo employs a custom **Retrieval-Augmented Generation (RAG)** pipeline powered by the **Google Gemini 1.5 Flash** model and official UP Tourism data.
+TourismCo. AI is an enterprise travel intelligence engine built to digitize and optimize destination planning for Uttar Pradesh, India. Moving beyond ungrounded LLM completions, TourismCo utilizes a proprietary Retrieval-Augmented Generation (RAG) architecture anchored in verified state tourism corpora, official survey databases, and real-time transit pricing.
 
-Whether you're planning a spiritual journey to Varanasi or a heritage tour in Agra, the platform dynamically generates highly accurate, budget-optimized, day-by-day itineraries that are tailored to your exact constraints (budget, days, group size, and dietary preferences).
+The system dynamically digests complex user constraints (multivariable budgets, group sizes, dietary profiles, and duration limits) to generate deterministic, cost-optimized, multi-city itineraries spanning religious, heritage, and cultural corridors including Varanasi, Agra, Ayodhya, and Lucknow.
 
 ---
 
-## 🎥 Demo & Intelligent Itinerary Generation
+## RAG Architecture
 
-Experience how our AI seamlessly parses complex constraints (e.g., *"Plan 3 days in Varanasi for my family under ₹20,000"*) to build multi-tiered itineraries.
-
-### 1. Dynamic Plan Generation
-The AI generates three optimized options (Budget, Balanced, Premium) with full cost breakdowns.
-![AI Itinerary Generation Demo](assets/tourismco_ai_itinerary_demo.webp)
-
-### 2. Day-by-Day Scheduling
-Interactive, tabbed UI breaking down morning, afternoon, and evening activities, including hidden gems.
-![Itinerary Schedule](assets/balanced_plan_expanded.png)
-
----
-
-## ✨ Core Features
-
-- 🧠 **Robust AI Engine:** Driven by Google Gemini with an enterprise-grade 7-model fallback chain and exponential backoff retry logic to ensure 99.9% uptime and API rate-limit resilience.
-- 🗺️ **RAG-Powered Accuracy:** Eliminates hallucinations by anchoring AI responses in a verified JSON Knowledge Base (`upTourismKB.js`) built on official Govt. of India Survey Data.
-- 🧮 **Granular Cost Calculation:** Dynamically calculates realistic budget breakdowns (Accommodation, Transport, Food, Activities) based on real-world expenditure patterns.
-- 🎨 **Premium Glassmorphic UI:** A stunning, highly responsive frontend built with React, Vite, and Tailwind CSS.
-- 📱 **Real-time Travel Circles:** Plan trips collaboratively with friends using Socket.IO powered group chats.
-
----
-
-## 🧠 AI & RAG Architecture
-
-Our backend relies on a custom implementation of RAG to ensure high-fidelity responses:
-
-1. **Constraint Extraction:** Natural language processing parses specific constraints (Cities, Days, Budget, Travelers, Vegetarian, etc.).
-2. **Local KB Retrieval (Vector-Free):** Fast, semantic keyword scoring matches the query against our local, hard-coded travel data structure.
-3. **Gemini Reasoning:** The combined prompt (User Query + Extracted Constraints + Local Data + Web Search) is sent to Gemini for deep reasoning and itinerary structuring.
-4. **Resilient Fallback:** If the active Gemini model encounters a `429` or `503` error, our system automatically falls back through a 7-model chain before degrading to a smart offline heuristic.
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend Client
-- **Framework:** React 19 (via Vite)
-- **Styling:** Tailwind CSS + Autoprefixer
-- **Icons & UI:** Lucide React
-- **Routing:** React Router v7
-
-### Backend Server
-- **Runtime:** Node.js (v20+)
-- **Framework:** Express.js
-- **AI Integration:** Google Gemini API
-- **Real-time:** Socket.IO
-- **Security:** Helmet, CORS, Express Rate Limit
+```
++-------------------------------------------------------------------------+
+|                              User Intent                                |
+|   e.g. "4 days in Varanasi & Ayodhya for family of 4, INR 45,000"       |
++-------------------------------------------------------------------------+
+                                    |
+                                    v
++-------------------------------------------------------------------------+
+|                       Constraint Extraction Engine                      |
+|      Entities: [Cities, Duration, Party Size, Budget, Diets]            |
++-------------------------------------------------------------------------+
+                                    |
+                                    v
++-------------------------------------------------------------------------+
+|                  Grounded Knowledge Retrieval Layer                    |
+|   - Verified UP Tourism Corpus (Distances, Transit Hubs, Entry Hours)   |
+|   - Real-World Cost Baselines (Lodging, Local Transit, Food Averages)   |
++-------------------------------------------------------------------------+
+                                    |
+                                    v
++-------------------------------------------------------------------------+
+|                     Gemini Reasoning & Fallback Matrix                  |
+|   - Google Gemini 1.5 Flash Reasoning                                   |
+|   - 7-Model Resilient Fallback Chain (Quota & Rate-Limit Shield)        |
++-------------------------------------------------------------------------+
+                                    |
+                                    v
++-------------------------------------------------------------------------+
+|                      Structured Plan Synthesis                          |
+|   - Tier 1: Budget Optimization                                         |
+|   - Tier 2: Balanced Standard                                           |
+|   - Tier 3: Premium Experience                                          |
+|   - Time-Indexed Itinerary (Morning, Afternoon, Evening, Logistics)     |
++-------------------------------------------------------------------------+
+```
 
 ---
 
-## 🚀 Getting Started
+## Core Capabilities
+
+- **Constraint-Grounded Synthesis:** Eliminates factual hallucinations by strictly bounding model context within verified regional tourism databases (`upTourismKB.js`).
+- **Tri-Tier Budget Optimization:** Automatically outputs three parallel spending profiles (Budget, Balanced, and Premium) with granular line-item cost projections for lodging, transport, dining, and site admissions.
+- **Seven-Model Resilience Cascade:** Implements an automated failover hierarchy across Gemini endpoints with exponential backoff, preventing service disruption during upstream throttling or transient errors.
+- **Collaborative Travel Circles:** Features bi-directional real-time communication via WebSockets (`Socket.IO`), enabling groups to synchronize itineraries and discuss plans in shared sessions.
+- **Production UI Architecture:** Built with modern React and Tailwind CSS, providing tabbed day-by-day scheduling, interactive maps, and responsive mobile interfaces.
+
+---
+
+## Technology Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend Client** | React 18/19, TypeScript, Tailwind CSS, Lucide React, React Router v7, Vite |
+| **Backend Services** | Node.js (v20+), Express.js, Socket.IO, Helmet, CORS, Express Rate Limit |
+| **Inference & Models** | Google Gemini 1.5 Flash, Google Generative AI SDK, Custom RAG Context Assembler |
+| **Hosting & CI/CD** | Vercel (Client Distribution), Render / Railway (Backend API Container) |
+
+---
+
+## Quick Start
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (v18+)
-- A [Google Gemini API Key](https://aistudio.google.com/app/apikey)
+- Node.js (v18.0.0 or higher)
+- Google Gemini API key from [Google AI Studio](https://aistudio.google.com/)
 
-### 1. Clone & Install
+### 1. Repository Setup
+
 ```bash
-git clone https://github.com/Ma-nas/TourismCo.git
+git clone https://github.com/Ma-nas/TourismCo..git
 cd TourismCo
 ```
 
-### 2. Backend Setup
+### 2. Backend API Setup
+
 ```bash
 cd server
 npm install
 
-# Configure Environment
-echo "PORT=5000" > .env
-echo "GEMINI_API_KEY=your_api_key_here" >> .env
+# Environment configuration
+cat <<EOF > .env
+PORT=5000
+GEMINI_API_KEY=your_gemini_api_key_here
+EOF
 
-# Start Development Server (Runs on :5000)
+# Start API service
 npm run dev
 ```
 
-### 3. Frontend Setup
+### 3. Frontend Client Setup
+
 ```bash
-# Open a new terminal in the root directory
+# Return to repository root
+cd ..
 npm install
 
-# Configure Environment
-echo "VITE_API_URL=http://localhost:5000" > .env.development
+# Environment configuration
+cat <<EOF > .env.development
+VITE_API_URL=http://localhost:5000
+EOF
 
-# Start Vite Client (Runs on :5173)
+# Start Vite client
 npm run dev
 ```
 
----
-
-## 🌍 Deployment
-
-TourismCo is designed for seamless, stateless deployment:
-- **Frontend:** Pre-configured for seamless deployment on [Vercel](https://vercel.com/) or [Netlify](https://www.netlify.com/).
-- **Backend:** Easily hostable on [Render](https://render.com/), [Railway](https://railway.app/), or AWS.
+The frontend client launches on `http://localhost:5173` and communicates with the backend API on `http://localhost:5000`.
 
 ---
 
-## 📜 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## API & Telemetry
 
-<div align="center">
-  <p>Built with ❤️ for Uttar Pradesh Tourism</p>
-</div>
+| Route | Protocol | Purpose |
+| :--- | :--- | :--- |
+| `POST /api/itinerary/generate` | HTTP REST | Accepts constraints JSON; returns tri-tier parsed itineraries |
+| `GET /api/destinations` | HTTP REST | Returns verified destination metadata, timings, and entry requirements |
+| `POST /api/budget/calculate` | HTTP REST | Generates real-time cost estimations based on traveler count and duration |
+| `/socket.io/` | WebSocket | Manages collaborative room state and synchronized itinerary events |
+
+---
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for full terms.
