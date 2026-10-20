@@ -23,10 +23,21 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-family: 'Inter', sans-serif;
+    line-height: 1.5;
   }
 
   h1, h2, h3, .font-display {
     font-family: 'Syne', 'Inter', sans-serif;
+  }
+
+  /* Focus-visible rings – keyboard navigation */
+  :focus-visible {
+    outline: 2px solid #4F9CF9;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
   }
 
   /* Custom scrollbar */
@@ -117,5 +128,56 @@ input:-webkit-autofill:active {
 input, textarea, select {
   background-color: transparent;
   color: #E6EDF3;
+}
+
+/* ── Estimate disclaimer badge ───────────────────────────────────────────── */
+.estimate-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  font-weight: 500;
+}
+
+/* ── Skip navigation link (keyboard accessibility) ───────────────────────── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 8px;
+  background: #4F9CF9;
+  color: #0B0F14;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 4px;
+  z-index: 9999;
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+.skip-link:focus {
+  top: 8px;
+}
+
+/* ── Reduced-motion overrides ────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Input invalid state ─────────────────────────────────────────────────── */
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3);
 }
 

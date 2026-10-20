@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import TopNav from './TopNav';
-import { MapPin, Calendar, Users, Wallet, Star, Check, ChevronDown, ChevronUp, Plus, Trash2, ArrowRight } from 'lucide-react';
+import { MapPin, Calendar, Users, Wallet, Star, Check, ChevronDown, ChevronUp, Plus, Trash2, ArrowRight, AlertCircle, RefreshCw, Info, Loader2 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface AccommodationOption { id: string; name: string; type: string; pricePerNight: number; amenities: string[]; }
@@ -27,6 +27,10 @@ const STYLES = [
 const SelectCard = ({ selected, onClick, children, className = '' }: any) => (
   <div
     onClick={onClick}
+    role="radio"
+    aria-checked={selected}
+    tabIndex={0}
+    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
     className={`cursor-pointer rounded-xl border p-4 transition-all duration-200
       ${selected
         ? 'border-primary bg-primary/10 shadow-[0_0_15px_rgba(79,156,249,0.15)]'
@@ -37,16 +41,59 @@ const SelectCard = ({ selected, onClick, children, className = '' }: any) => (
   </div>
 );
 
+// ─── Error Banner ──────────────────────────────────────────────────────────────
+const ErrorBanner = ({ message, onRetry }: { message: string; onRetry?: () => void }) => (
+  <div
+    className="flex items-start gap-3 px-4 py-3 rounded-xl border border-red-500/30 text-sm"
+    style={{ background: 'rgba(239,68,68,0.08)' }}
+    role="alert"
+  >
+    <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" aria-hidden="true" />
+    <div className="flex-1">
+      <p className="text-red-300 font-medium">{message}</p>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="mt-2 flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors"
+        >
+          <RefreshCw className="w-3 h-3" aria-hidden="true" /> Try again
+        </button>
+      )}
+    </div>
+  </div>
+);
+
+// ─── Loading Skeleton ─────────────────────────────────────────────────────────
+const OptionsSkeleton = () => (
+  <div className="space-y-3" aria-label="Loading options..." aria-busy="true">
+    {[1, 2, 3].map(i => (
+      <div key={i} className="rounded-xl border border-white/5 p-4 shimmer" style={{ height: 72 }} />
+    ))}
+  </div>
+);
+
+// ─── Estimate Disclaimer ──────────────────────────────────────────────────────
+const EstimateNote = () => (
+  <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl border border-yellow-500/20 text-xs"
+    style={{ background: 'rgba(245,158,11,0.06)' }} role="note">
+    <Info className="w-3.5 h-3.5 text-yellow-400 shrink-0 mt-0.5" aria-hidden="true" />
+    <p className="text-yellow-200/70">
+      All prices shown are <strong className="text-yellow-400">estimates</strong> based on typical rates and may vary by season, availability, and booking platform. Verify with providers before booking.
+    </p>
+  </div>
+);
+
 // ─── Step Indicator ───────────────────────────────────────────────────────────
 const StepBar = ({ current, total }: { current: number; total: number }) => (
-  <div className="flex items-center gap-2 mb-8">
+  <div className="flex items-center gap-2 mb-8" role="progressbar" aria-valuenow={current + 1} aria-valuemin={1} aria-valuemax={total} aria-label={`Step ${current + 1} of ${total}`}>
     {Array.from({ length: total }, (_, i) => (
       <React.Fragment key={i}>
         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all
-          ${i < current ? 'bg-secondary text-background' : i === current ? 'bg-primary text-white' : 'bg-surface border border-white/10 text-gray-500'}`}>
-          {i < current ? <Check className="w-4 h-4" /> : i + 1}
+          ${i < current ? 'bg-secondary text-background' : i === current ? 'bg-primary text-white' : 'bg-surface border border-white/10 text-gray-500'}`}
+          aria-label={i < current ? `Step ${i + 1} completed` : i === current ? `Step ${i + 1} current` : `Step ${i + 1}`}>
+          {i < current ? <Check className="w-4 h-4" aria-hidden="true" /> : i + 1}
         </div>
-        {i < total - 1 && <div className={`flex-1 h-0.5 transition-all ${i < current ? 'bg-secondary' : 'bg-white/10'}`} />}
+        {i < total - 1 && <div className={`flex-1 h-0.5 transition-all ${i < current ? 'bg-secondary' : 'bg-white/10'}`} aria-hidden="true" />}
       </React.Fragment>
     ))}
   </div>
@@ -60,6 +107,8 @@ const ItineraryBuilder = () => {
   const [travelers, setTravelers] = useState(2);
   const [travelStyle, setTravelStyle] = useState('balanced');
   const [options, setOptions] = useState<CustomizationOptions | null>(null);
+  const [optionsLoading, setOptionsLoading] = useState(false);
+  const [optionsError, setOptionsError] = useState<string | null>(null);
   const [selectedAccom, setSelectedAccom] = useState('');
   const [selectedTransport, setSelectedTransport] = useState('');
   const [selectedMeal, setSelectedMeal] = useState('');
@@ -67,7 +116,9 @@ const ItineraryBuilder = () => {
   const [costPreview, setCostPreview] = useState<any>(null);
   const [builtItinerary, setBuiltItinerary] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [buildError, setBuildError] = useState<string | null>(null);
   const [bookingDone, setBookingDone] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
   const [confirmationId, setConfirmationId] = useState('');
 
   const API = (() => {
@@ -78,19 +129,29 @@ const ItineraryBuilder = () => {
     return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
   })();
 
+  const fetchOptions = async (cityName: string) => {
+    setOptionsLoading(true);
+    setOptionsError(null);
+    try {
+      const r = await fetch(`${API}/itinerary/options/${cityName}`);
+      if (!r.ok) throw new Error(`Server returned ${r.status}`);
+      const data = await r.json();
+      setOptions(data.data);
+      setSelectedAccom(data.data.accommodation[1]?.id || data.data.accommodation[0]?.id || '');
+      setSelectedTransport(data.data.transport[2]?.id || data.data.transport[0]?.id || '');
+      setSelectedMeal(data.data.mealPlans[1]?.id || data.data.mealPlans[0]?.id || '');
+      setSelectedActivities([]);
+      setCostPreview(null);
+    } catch (err: any) {
+      setOptionsError('Unable to load options for this destination. Check your connection and try again.');
+    } finally {
+      setOptionsLoading(false);
+    }
+  };
+
   // Fetch options when city changes
   useEffect(() => {
-    fetch(`${API}/itinerary/options/${city}`)
-      .then(r => r.json())
-      .then(data => {
-        setOptions(data.data);
-        setSelectedAccom(data.data.accommodation[1]?.id || '');
-        setSelectedTransport(data.data.transport[2]?.id || '');
-        setSelectedMeal(data.data.mealPlans[1]?.id || '');
-        setSelectedActivities([]);
-        setCostPreview(null);
-      })
-      .catch(console.error);
+    fetchOptions(city);
   }, [city]);
 
   // Live cost calculation
@@ -100,50 +161,73 @@ const ItineraryBuilder = () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cityName: city, days, travelers, accommodationId: selectedAccom, transportId: selectedTransport, mealPlanId: selectedMeal, activityIds: selectedActivities })
-    }).then(r => r.json()).then(d => setCostPreview(d.data)).catch(console.error);
+    }).then(r => r.json()).then(d => setCostPreview(d.data)).catch(() => {
+      // Cost preview is non-critical, fail silently
+    });
   }, [city, days, travelers, selectedAccom, selectedTransport, selectedMeal, selectedActivities]);
 
   const buildItinerary = async () => {
+    setBuildError(null);
     setLoading(true);
-    const res = await fetch(`${API}/itinerary/build`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cityName: city, days, travelers, accommodationId: selectedAccom, transportId: selectedTransport, mealPlanId: selectedMeal, activityIds: selectedActivities, travelStyle })
-    });
-    const data = await res.json();
-    setBuiltItinerary(data.data);
-    setLoading(false);
-    setStep(4);
+    try {
+      const res = await fetch(`${API}/itinerary/build`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cityName: city, days, travelers, accommodationId: selectedAccom, transportId: selectedTransport, mealPlanId: selectedMeal, activityIds: selectedActivities, travelStyle })
+      });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.message || `Server returned ${res.status}`);
+      }
+      const data = await res.json();
+      if (!data.data) throw new Error('No itinerary data returned. Please try again.');
+      setBuiltItinerary(data.data);
+      setStep(4);
+    } catch (err: any) {
+      setBuildError(err.message || 'Failed to build itinerary. Your selections have been saved — please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const confirmBooking = async () => {
     if (!builtItinerary) return;
+    setBookingError(null);
     setLoading(true);
-    const startDate = new Date();
-    const endDate = new Date();
-    endDate.setDate(endDate.getDate() + days);
-    const res = await fetch(`${API}/bookings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        destinationName: city,
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-        days, travelers,
-        accommodationId: selectedAccom,
-        accommodationName: options?.accommodation.find(a => a.id === selectedAccom)?.name,
-        transportId: selectedTransport,
-        transportMode: options?.transport.find(t => t.id === selectedTransport)?.mode,
-        mealPlanId: selectedMeal,
-        mealPlanName: options?.mealPlans.find(m => m.id === selectedMeal)?.plan,
-        activityIds: selectedActivities,
-        totalCost: builtItinerary.costSummary.total,
-      })
-    });
-    const data = await res.json();
-    setConfirmationId(data.data?.confirmationId || 'TCO-XXXX');
-    setBookingDone(true);
-    setLoading(false);
+    try {
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + days);
+      const res = await fetch(`${API}/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destinationName: city,
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
+          days, travelers,
+          accommodationId: selectedAccom,
+          accommodationName: options?.accommodation.find(a => a.id === selectedAccom)?.name,
+          transportId: selectedTransport,
+          transportMode: options?.transport.find(t => t.id === selectedTransport)?.mode,
+          mealPlanId: selectedMeal,
+          mealPlanName: options?.mealPlans.find(m => m.id === selectedMeal)?.plan,
+          activityIds: selectedActivities,
+          totalCost: builtItinerary.costSummary?.total,
+        })
+      });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.message || `Booking service returned ${res.status}`);
+      }
+      const data = await res.json();
+      setConfirmationId(data.data?.confirmationId || 'TCO-XXXX');
+      setBookingDone(true);
+    } catch (err: any) {
+      setBookingError(err.message || 'Booking could not be completed. Your itinerary is still saved — please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleActivity = (id: string) => {
@@ -160,16 +244,20 @@ const ItineraryBuilder = () => {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center">
         <TopNav />
         <div className="flex flex-col items-center justify-center flex-1 px-6 text-center">
-          <div className="w-24 h-24 rounded-full bg-secondary/20 border-2 border-secondary flex items-center justify-center mb-6 animate-bounce">
+          <div className="w-24 h-24 rounded-full bg-secondary/20 border-2 border-secondary flex items-center justify-center mb-6 animate-bounce" aria-hidden="true">
             <Check className="w-12 h-12 text-secondary" />
           </div>
           <h1 className="text-4xl font-bold text-white font-display mb-3">Booking Confirmed!</h1>
-          <p className="text-gray-400 mb-2">Your {days}-day {city} trip has been booked.</p>
+          <p className="text-gray-400 mb-2">Your {days}-day {city} trip has been logged.</p>
           <div className="mt-4 bg-card border border-secondary/30 rounded-2xl px-8 py-4 inline-block">
             <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Confirmation ID</p>
             <p className="text-3xl font-bold text-secondary tracking-widest">{confirmationId}</p>
           </div>
-          <button onClick={() => { setBookingDone(false); setStep(0); }} className="mt-8 px-8 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary/90 transition-colors">
+          <EstimateNote />
+          <button
+            onClick={() => { setBookingDone(false); setStep(0); }}
+            className="mt-8 px-8 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary/90 transition-colors"
+          >
             Plan Another Trip
           </button>
         </div>
@@ -179,13 +267,14 @@ const ItineraryBuilder = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <a href="#builder-main" className="skip-link">Skip to builder</a>
       <TopNav />
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-10">
+      <main id="builder-main" className="flex-1 w-full max-w-6xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white font-display mb-2">✨ Itinerary Builder</h1>
-          <p className="text-gray-400">Customize every detail of your Uttar Pradesh trip.</p>
+          <p className="text-gray-400">Customise every detail of your Uttar Pradesh trip.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -196,11 +285,11 @@ const ItineraryBuilder = () => {
             {/* STEP 0: Basics */}
             {step === 0 && (
               <div className="glass rounded-2xl p-6 space-y-6">
-                <h2 className="text-2xl font-bold text-white font-display">Where & When?</h2>
+                <h2 className="text-2xl font-bold text-white font-display">Where &amp; When?</h2>
 
                 <div>
-                  <p className="text-sm text-gray-400 mb-3 uppercase tracking-wider">Choose Destination</p>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <p className="text-sm text-gray-400 mb-3 uppercase tracking-wider" id="city-label">Choose Destination</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3" role="radiogroup" aria-labelledby="city-label">
                     {CITIES.map(c => (
                       <SelectCard key={c} selected={city === c} onClick={() => setCity(c)}>
                         <p className="font-medium text-white">{c}</p>
@@ -212,30 +301,46 @@ const ItineraryBuilder = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm text-gray-400 mb-2 block uppercase tracking-wider">Days</label>
+                    <label htmlFor="days-input" className="text-sm text-gray-400 mb-2 block uppercase tracking-wider">Days</label>
                     <div className="flex items-center gap-3 bg-surface rounded-xl p-3 border border-white/5">
-                      <button onClick={() => setDays(d => Math.max(1, d - 1))} className="w-8 h-8 rounded-lg bg-card text-white hover:bg-white/10 font-bold transition-colors">-</button>
-                      <span className="flex-1 text-center text-xl font-bold text-white">{days}</span>
-                      <button onClick={() => setDays(d => Math.min(14, d + 1))} className="w-8 h-8 rounded-lg bg-card text-white hover:bg-white/10 font-bold transition-colors">+</button>
+                      <button
+                        onClick={() => setDays(d => Math.max(1, d - 1))}
+                        className="w-8 h-8 rounded-lg bg-card text-white hover:bg-white/10 font-bold transition-colors"
+                        aria-label="Decrease days"
+                      >-</button>
+                      <span id="days-input" className="flex-1 text-center text-xl font-bold text-white" aria-live="polite">{days}</span>
+                      <button
+                        onClick={() => setDays(d => Math.min(14, d + 1))}
+                        className="w-8 h-8 rounded-lg bg-card text-white hover:bg-white/10 font-bold transition-colors"
+                        aria-label="Increase days"
+                      >+</button>
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-400 mb-2 block uppercase tracking-wider">Travelers</label>
+                    <label htmlFor="travelers-input" className="text-sm text-gray-400 mb-2 block uppercase tracking-wider">Travelers</label>
                     <div className="flex items-center gap-3 bg-surface rounded-xl p-3 border border-white/5">
-                      <button onClick={() => setTravelers(t => Math.max(1, t - 1))} className="w-8 h-8 rounded-lg bg-card text-white hover:bg-white/10 font-bold transition-colors">-</button>
-                      <span className="flex-1 text-center text-xl font-bold text-white">{travelers}</span>
-                      <button onClick={() => setTravelers(t => Math.min(20, t + 1))} className="w-8 h-8 rounded-lg bg-card text-white hover:bg-white/10 font-bold transition-colors">+</button>
+                      <button
+                        onClick={() => setTravelers(t => Math.max(1, t - 1))}
+                        className="w-8 h-8 rounded-lg bg-card text-white hover:bg-white/10 font-bold transition-colors"
+                        aria-label="Decrease travelers"
+                      >-</button>
+                      <span id="travelers-input" className="flex-1 text-center text-xl font-bold text-white" aria-live="polite">{travelers}</span>
+                      <button
+                        onClick={() => setTravelers(t => Math.min(20, t + 1))}
+                        className="w-8 h-8 rounded-lg bg-card text-white hover:bg-white/10 font-bold transition-colors"
+                        aria-label="Increase travelers"
+                      >+</button>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-400 mb-3 uppercase tracking-wider">Travel Style</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <p className="text-sm text-gray-400 mb-3 uppercase tracking-wider" id="style-label">Travel Style</p>
+                  <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-labelledby="style-label">
                     {STYLES.map(s => (
                       <SelectCard key={s.id} selected={travelStyle === s.id} onClick={() => setTravelStyle(s.id)}>
                         <div className="flex items-center gap-2">
-                          <span className="text-xl">{s.icon}</span>
+                          <span className="text-xl" aria-hidden="true">{s.icon}</span>
                           <div>
                             <p className="font-medium text-white">{s.label}</p>
                             <p className="text-xs text-gray-400">{s.desc}</p>
@@ -249,69 +354,85 @@ const ItineraryBuilder = () => {
             )}
 
             {/* STEP 1: Accommodation */}
-            {step === 1 && options && (
+            {step === 1 && (
               <div className="glass rounded-2xl p-6 space-y-4">
                 <h2 className="text-2xl font-bold text-white font-display">🏨 Choose Accommodation</h2>
-                {options.accommodation.map(acc => (
-                  <SelectCard key={acc.id} selected={selectedAccom === acc.id} onClick={() => setSelectedAccom(acc.id)}>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-semibold text-white">{acc.name}</p>
-                        <p className="text-xs text-gray-400 mt-1 capitalize">{acc.type} tier</p>
-                        <div className="flex flex-wrap gap-1.5 mt-2">
-                          {acc.amenities.map(a => (
-                            <span key={a} className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">{a}</span>
-                          ))}
+                {optionsLoading && <OptionsSkeleton />}
+                {optionsError && <ErrorBanner message={optionsError} onRetry={() => fetchOptions(city)} />}
+                {!optionsLoading && !optionsError && options && (
+                  <div role="radiogroup" aria-label="Accommodation options" className="space-y-3">
+                    {options.accommodation.map(acc => (
+                      <SelectCard key={acc.id} selected={selectedAccom === acc.id} onClick={() => setSelectedAccom(acc.id)}>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-semibold text-white">{acc.name}</p>
+                            <p className="text-xs text-gray-400 mt-1 capitalize">{acc.type} tier</p>
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {acc.amenities.map(a => (
+                                <span key={a} className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">{a}</span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0 ml-4">
+                            <p className="text-xl font-bold text-white">{fmt(acc.pricePerNight)}</p>
+                            <p className="text-xs text-gray-400">/ night <span className="estimate-badge ml-1">est.</span></p>
+                            <p className="text-sm text-secondary mt-1">{fmt(acc.pricePerNight * days)} total est.</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-right shrink-0 ml-4">
-                        <p className="text-xl font-bold text-white">{fmt(acc.pricePerNight)}</p>
-                        <p className="text-xs text-gray-400">/ night</p>
-                        <p className="text-sm text-secondary mt-1">{fmt(acc.pricePerNight * days)} total</p>
-                      </div>
-                    </div>
-                  </SelectCard>
-                ))}
+                      </SelectCard>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* STEP 2: Transport + Meals */}
-            {step === 2 && options && (
+            {step === 2 && (
               <div className="space-y-6">
                 <div className="glass rounded-2xl p-6 space-y-4">
                   <h2 className="text-2xl font-bold text-white font-display">🚗 Transport</h2>
-                  {options.transport.map(tr => (
-                    <SelectCard key={tr.id} selected={selectedTransport === tr.id} onClick={() => setSelectedTransport(tr.id)}>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-white">{tr.mode}</p>
-                          <p className="text-xs text-gray-400 mt-1">{tr.note}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-white">{fmt(tr.pricePerDay)}/day</p>
-                          <p className="text-sm text-secondary">{fmt(tr.pricePerDay * days)} total</p>
-                        </div>
-                      </div>
-                    </SelectCard>
-                  ))}
+                  {optionsLoading && <OptionsSkeleton />}
+                  {optionsError && <ErrorBanner message={optionsError} onRetry={() => fetchOptions(city)} />}
+                  {!optionsLoading && !optionsError && options && (
+                    <div role="radiogroup" aria-label="Transport options" className="space-y-3">
+                      {options.transport.map(tr => (
+                        <SelectCard key={tr.id} selected={selectedTransport === tr.id} onClick={() => setSelectedTransport(tr.id)}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-semibold text-white">{tr.mode}</p>
+                              <p className="text-xs text-gray-400 mt-1">{tr.note}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-white">{fmt(tr.pricePerDay)}/day <span className="estimate-badge">est.</span></p>
+                              <p className="text-sm text-secondary">{fmt(tr.pricePerDay * days)} total est.</p>
+                            </div>
+                          </div>
+                        </SelectCard>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="glass rounded-2xl p-6 space-y-4">
                   <h2 className="text-2xl font-bold text-white font-display">🍛 Meal Plan</h2>
-                  {options.mealPlans.map(mp => (
-                    <SelectCard key={mp.id} selected={selectedMeal === mp.id} onClick={() => setSelectedMeal(mp.id)}>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-white">{mp.plan}</p>
-                          <p className="text-xs text-gray-400 mt-1">{mp.description}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-white">{mp.pricePerDayPerPerson === 0 ? 'Free' : `${fmt(mp.pricePerDayPerPerson)}/person/day`}</p>
-                          {mp.pricePerDayPerPerson > 0 && <p className="text-sm text-secondary">{fmt(mp.pricePerDayPerPerson * days * travelers)} total</p>}
-                        </div>
-                      </div>
-                    </SelectCard>
-                  ))}
+                  {!optionsLoading && !optionsError && options && (
+                    <div role="radiogroup" aria-label="Meal plan options" className="space-y-3">
+                      {options.mealPlans.map(mp => (
+                        <SelectCard key={mp.id} selected={selectedMeal === mp.id} onClick={() => setSelectedMeal(mp.id)}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-semibold text-white">{mp.plan}</p>
+                              <p className="text-xs text-gray-400 mt-1">{mp.description}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-white">{mp.pricePerDayPerPerson === 0 ? 'Free' : `${fmt(mp.pricePerDayPerPerson)}/person/day`}</p>
+                              {mp.pricePerDayPerPerson > 0 && <p className="text-sm text-secondary">{fmt(mp.pricePerDayPerPerson * days * travelers)} total est.</p>}
+                            </div>
+                          </div>
+                        </SelectCard>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -321,25 +442,30 @@ const ItineraryBuilder = () => {
               <div className="glass rounded-2xl p-6 space-y-4">
                 <h2 className="text-2xl font-bold text-white font-display">🎯 Add Activities</h2>
                 <p className="text-gray-400 text-sm">Select optional experiences to add to your itinerary</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {options.activities.map(act => {
-                    const picked = selectedActivities.includes(act.id);
-                    return (
-                      <SelectCard key={act.id} selected={picked} onClick={() => toggleActivity(act.id)}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <p className="font-medium text-white text-sm">{act.name}</p>
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-surface border border-white/10 text-gray-400 mt-1 inline-block">{act.category}</span>
+                {options.activities.length === 0 ? (
+                  <p className="text-gray-500 text-sm text-center py-6">No activities available for {city} — you can still build your itinerary.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3" role="group" aria-label="Optional activities">
+                    {options.activities.map(act => {
+                      const picked = selectedActivities.includes(act.id);
+                      return (
+                        <SelectCard key={act.id} selected={picked} onClick={() => toggleActivity(act.id)}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="font-medium text-white text-sm">{act.name}</p>
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-surface border border-white/10 text-gray-400 mt-1 inline-block">{act.category}</span>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-sm font-bold text-white">{act.price === 0 ? 'Free' : fmt(act.price)}</p>
+                              {picked && <Check className="w-4 h-4 text-secondary ml-auto mt-1" aria-hidden="true" />}
+                            </div>
                           </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-sm font-bold text-white">{act.price === 0 ? 'Free' : fmt(act.price)}</p>
-                            {picked && <Check className="w-4 h-4 text-secondary ml-auto mt-1" />}
-                          </div>
-                        </div>
-                      </SelectCard>
-                    );
-                  })}
-                </div>
+                        </SelectCard>
+                      );
+                    })}
+                  </div>
+                )}
+                {buildError && <ErrorBanner message={buildError} />}
               </div>
             )}
 
@@ -347,61 +473,101 @@ const ItineraryBuilder = () => {
             {step === 4 && builtItinerary && (
               <div className="space-y-4">
                 <div className="glass rounded-2xl p-6">
-                  <h2 className="text-2xl font-bold text-white font-display mb-1">📅 Your Custom Itinerary</h2>
-                  <p className="text-gray-400 text-sm mb-6">{builtItinerary.days}-day {builtItinerary.cityName} | {travelers} traveler{travelers > 1 ? 's' : ''} | {builtItinerary.travelStyle} style</p>
-                  <div className="space-y-4">
-                    {builtItinerary.dayPlans.map((day: any) => (
-                      <div key={day.day} className="bg-card rounded-xl border border-white/5 p-4">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">{day.day}</div>
-                          <div>
-                            <p className="font-semibold text-white">{day.title}</p>
-                            <p className="text-xs text-gray-400">{day.transport} · {day.meals}</p>
+                  <div className="flex items-start justify-between mb-1">
+                    <h2 className="text-2xl font-bold text-white font-display">📅 Your Custom Itinerary</h2>
+                    <button
+                      onClick={() => setStep(3)}
+                      className="text-xs text-gray-400 hover:text-white transition-colors border border-white/10 hover:border-white/30 px-3 py-1.5 rounded-lg"
+                    >
+                      ← Modify
+                    </button>
+                  </div>
+                  <p className="text-gray-400 text-sm mb-2">{builtItinerary.days}-day {builtItinerary.cityName} | {travelers} traveler{travelers > 1 ? 's' : ''} | {builtItinerary.travelStyle} style</p>
+                  <EstimateNote />
+                  <div className="space-y-4 mt-5">
+                    {builtItinerary.dayPlans && builtItinerary.dayPlans.length > 0 ? (
+                      builtItinerary.dayPlans.map((day: any) => (
+                        <div key={day.day} className="bg-card rounded-xl border border-white/5 p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm" aria-hidden="true">{day.day}</div>
+                            <div>
+                              <p className="font-semibold text-white">{day.title}</p>
+                              <p className="text-xs text-gray-400">{day.transport} · {day.meals}</p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="space-y-2">
-                          {day.schedule.map((slot: any, idx: number) => (
-                            <div key={idx} className="flex gap-3">
-                              <span className="text-xs text-primary w-20 shrink-0 mt-0.5">{slot.time}</span>
-                              <div>
-                                <p className="text-sm font-medium text-gray-300">{slot.label}</p>
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {slot.items.map((item: any, ii: number) => (
-                                    <span key={ii} className="text-xs bg-surface px-2 py-0.5 rounded-full text-gray-400 border border-white/5">{item.name}</span>
-                                  ))}
+                          <div className="space-y-2">
+                            {day.schedule?.map((slot: any, idx: number) => (
+                              <div key={idx} className="flex gap-3">
+                                <span className="text-xs text-primary w-20 shrink-0 mt-0.5 font-mono">{slot.time}</span>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-300">{slot.label}</p>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {slot.items?.map((item: any, ii: number) => (
+                                      <span key={ii} className="text-xs bg-surface px-2 py-0.5 rounded-full text-gray-400 border border-white/5">{item.name}</span>
+                                    ))}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>No day-by-day data returned. Please go back and try building again.</p>
+                        <button onClick={() => setStep(3)} className="mt-3 text-primary hover:underline text-sm">← Go back</button>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
+                {bookingError && <ErrorBanner message={bookingError} onRetry={confirmBooking} />}
               </div>
             )}
 
             {/* Navigation Buttons */}
             <div className="flex items-center justify-between pt-2">
               {step > 0 && step < 4 ? (
-                <button onClick={() => setStep(s => s - 1)} className="px-6 py-3 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 transition-colors">
+                <button
+                  onClick={() => setStep(s => s - 1)}
+                  className="px-6 py-3 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 transition-colors"
+                >
                   ← Back
                 </button>
               ) : <div />}
 
               {step < 3 && (
-                <button onClick={() => setStep(s => s + 1)} className="px-8 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary/90 transition-colors flex items-center gap-2">
-                  Next <ArrowRight className="w-4 h-4" />
+                <button
+                  onClick={() => setStep(s => s + 1)}
+                  disabled={step === 1 && optionsLoading}
+                  className="px-8 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {step === 1 && optionsLoading
+                    ? <><Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> Loading...</>
+                    : <>Next <ArrowRight className="w-4 h-4" aria-hidden="true" /></>}
                 </button>
               )}
               {step === 3 && (
-                <button onClick={buildItinerary} disabled={loading} className="px-8 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50">
-                  {loading ? 'Building...' : 'Build My Itinerary ✨'}
+                <button
+                  onClick={buildItinerary}
+                  disabled={loading}
+                  className="px-8 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-busy={loading}
+                >
+                  {loading
+                    ? <><Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> Building itinerary...</>
+                    : 'Build My Itinerary ✨'}
                 </button>
               )}
               {step === 4 && (
-                <button onClick={confirmBooking} disabled={loading} className="px-8 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-background font-bold hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-50 glow-primary">
-                  {loading ? 'Booking...' : '🎉 Confirm & Book'}
+                <button
+                  onClick={confirmBooking}
+                  disabled={loading}
+                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-background font-bold hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed glow-primary"
+                  aria-busy={loading}
+                >
+                  {loading
+                    ? <><Loader2 className="w-4 h-4 animate-spin text-black" aria-hidden="true" /> Confirming...</>
+                    : '🎉 Confirm & Book'}
                 </button>
               )}
             </div>
@@ -428,14 +594,17 @@ const ItineraryBuilder = () => {
                     ))}
                     <div className="border-t border-white/10 pt-3 mt-3">
                       <div className="flex justify-between">
-                        <span className="text-white font-bold">Total</span>
+                        <span className="text-white font-bold">Total (est.)</span>
                         <span className="text-2xl font-bold text-primary">{fmt(costPreview.total)}</span>
                       </div>
-                      <p className="text-xs text-gray-400 text-right mt-1">{fmt(costPreview.perPerson)} per person</p>
+                      <p className="text-xs text-gray-400 text-right mt-1">{fmt(costPreview.perPerson)} per person (est.)</p>
                     </div>
+                    <EstimateNote />
                   </>
+                ) : optionsLoading ? (
+                  <p className="text-gray-500 text-sm text-center py-4">Loading pricing...</p>
                 ) : (
-                  <p className="text-gray-500 text-sm text-center py-4">Configure your trip to see pricing</p>
+                  <p className="text-gray-500 text-sm text-center py-4">Configure your trip to see estimated pricing</p>
                 )}
               </div>
             </div>
