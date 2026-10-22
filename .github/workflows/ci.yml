@@ -1,0 +1,41 @@
+﻿name: Continuous Integration
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  server-tests:
+    name: Backend Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+      - name: Install Server Dependencies
+        working-directory: ./server
+        run: npm ci
+      - name: Run Constraint & RAG Tests
+        working-directory: ./server
+        run: node tests/test_constraints.js
+
+  frontend-build:
+    name: Frontend Typecheck & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install Client Dependencies
+        run: npm ci
+      - name: Build Application Bundle
+        run: npm run build
